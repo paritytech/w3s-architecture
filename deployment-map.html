@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Polkadot Product — Deployment Dependency Map</title>
+<style>
+  :root {
+    --pink: #e6007a;
+    --pink-soft: #ffd6ec;
+    --ink: #0d0d12;
+    --paper: #f5f5f7;
+    --card: #ffffff;
+    --muted: #6b6b76;
+    --line: #d9d9e0;
+    --warn: #b25b00;
+    --warn-bg: #fff4e3;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.page {
+    padding: 28px 32px 22px;
+    background: linear-gradient(180deg, #fff 0%, #fafafc 100%);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: saturate(140%) blur(6px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 4px var(--pink-soft); }
+  header.page h1 { font-size: 22px; margin: 0; letter-spacing: -0.3px; }
+  header.page p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; max-width: 980px; line-height: 1.5; }
+  .flow-hint {
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 600; color: var(--pink);
+    background: var(--pink-soft); padding: 6px 12px; border-radius: 999px;
+  }
+  .legend { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .chip { width: 26px; height: 14px; border-radius: 4px; display: inline-block; }
+  .chip.repo { background: var(--card); border: 1.5px solid var(--line); }
+  .chip.norepo { background: var(--warn-bg); border: 1.5px dashed var(--warn); }
+  .chip.w3f { background: var(--card); border: 1.5px solid var(--line); box-shadow: inset 3px 0 0 #888; }
+
+  .board {
+    display: flex;
+    flex-direction: row;   /* Layer 1 (foundation) on the LEFT, apps on the RIGHT */
+    gap: 0;
+    overflow-x: auto;
+    padding: 26px 32px 56px;
+    align-items: stretch;
+  }
+  .layer {
+    flex: 1 0 300px;
+    min-width: 300px;
+    padding: 0 18px;
+    border-right: 1px dashed var(--line);
+    position: relative;
+  }
+  .layer:last-child { border-right: none; }
+  .layer-head { margin-bottom: 16px; }
+  .layer-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--ink); color: #fff; font-weight: 700; font-size: 14px;
+  }
+  .layer-title { font-size: 14.5px; font-weight: 700; margin: 10px 0 2px; letter-spacing: -0.2px; }
+  .layer-sub { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .order-tag {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--pink); margin-bottom: 6px; display: block;
+  }
+
+  .cards { display: flex; flex-direction: column; gap: 7px; }
+  a.card, div.card {
+    text-decoration: none;
+    color: inherit;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    padding: 8px 11px;
+    display: block;
+    min-width: 0;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  a.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(230,0,122,0.14);
+    border-color: var(--pink);
+  }
+  .card .name { font-size: 13px; font-weight: 650; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .card .name .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .repo { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: ui-monospace, "SF Mono", Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .owner { font-size: 11px; color: #9a9aa4; margin-top: 5px; }
+  .card .arrow { margin-left: auto; color: var(--pink); font-weight: 700; opacity: 0; transition: opacity .12s; }
+  a.card:hover .arrow { opacity: 1; }
+
+  .card.norepo {
+    background: var(--warn-bg);
+    border: 1.5px dashed var(--warn);
+    cursor: default;
+  }
+  .card.norepo .name { color: var(--warn); }
+  .tag {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 2px 6px; border-radius: 5px; background: var(--warn); color: #fff;
+  }
+  .tag.w3f { background: #888; }
+
+  .card.w3f { box-shadow: inset 3px 0 0 #888; }
+
+  footer { padding: 18px 32px 40px; color: #9a9aa4; font-size: 11.5px; }
+  footer code { font-family: ui-monospace, Menlo, monospace; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <div class="brand"><span class="dot"></span><h1>Polkadot Product Ecosystem E2E Deployment Map</h1></div>
+  <div class="legend">
+    <span><i class="chip repo"></i> Repo + instructions available</span>
+    <span><i class="chip norepo"></i> No repo yet — handoff gap</span>
+    <span><i class="chip w3f"></i> Deployed internally</span>
+  </div>
+</header>
+
+<div class="board" id="board"></div>
+
+<script>
+// Layers ordered 1..5. Layer 1 = foundation (leftmost), apps rightmost.
+const LAYERS = [
+  {
+    num: 1,
+    title: "Test Environment (Chains)",
+    sub: "The test network everything else connects to. Must exist before anything.",
+    items: [
+      { name: "Polkadot SDK (relay + system chains)", repo: "https://github.com/paritytech/polkadot-sdk" },
+      { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain" },
+      { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality" },
+    ]
+  },
+  {
+    num: 2,
+    title: "Infrastructure",
+    sub: "Backend services and on-chain plumbing the platform & apps call into.",
+    items: [
+      { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend" },
+      { name: "dotNS", repo: "https://github.com/paritytech/dotns" },
+      { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy" },
+      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager" },
+    ]
+  },
+  {
+    num: 3,
+    title: "SDKs & Testing",
+    sub: "Client SDKs and the test harness the platform clients are built on.",
+    items: [
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks" },
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk" },
+      { name: "Testing suite (host-api-test-sdk)", repo: "https://github.com/paritytech/host-api-test-sdk" },
+    ]
+  },
+  {
+    num: 4,
+    title: "Platform — Polkadot Triangle",
+    sub: "The clients users run to discover & launch dApps. Depend on SDKs + infra.",
+    items: [
+      { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli" },
+      { name: "Polkadot Mobile — iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2" },
+      { name: "Polkadot Mobile — Android", repo: "https://github.com/paritytech/polkadot-app-android-v2" },
+      { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop" },
+      { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter" },
+    ]
+  },
+  {
+    num: 5,
+    title: "Apps & Proof-of-Concepts",
+    sub: "End-user products, deployed last — they assume the full stack to the right is live.",
+    items: [
+      { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app" },
+      { name: "Playground App", repo: "https://github.com/paritytech/playground-app" },
+      { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli" },
+      { name: "Playground Constellation", repo: "https://github.com/paritytech/playground-constellation" },
+      { name: "T3rminal", repo: "https://github.com/paritytech/t3rminal" },
+      { name: "Browse.dot", repo: "https://github.com/paritytech/browse" },
+      { name: "LocalDot", repo: "https://github.com/paritytech/p2p-market" },
+      { name: "LinkTr33", repo: "https://github.com/paritytech/linktr33" },
+      { name: "Sit3Drop", repo: "https://github.com/paritytech/dotdot-deployer" },
+      { name: "Mercado", repo: "https://github.com/paritytech/mercado" },
+      { name: "W3S Ticketing", repo: "https://github.com/paritytech/tick3t", w3f: true },
+      { name: "W3S Coin", repo: null, w3f: true },
+    ]
+  },
+];
+
+const board = document.getElementById("board");
+
+LAYERS.forEach((layer, idx) => {
+  const col = document.createElement("div");
+  col.className = "layer";
+
+  col.innerHTML = `
+    <div class="layer-head">
+      <span class="layer-num">${layer.num}</span>
+      <div class="layer-title">${layer.title}</div>
+      <div class="layer-sub">${layer.sub}</div>
+    </div>
+    <div class="cards"></div>
+  `;
+  const cards = col.querySelector(".cards");
+
+  layer.items.forEach(it => {
+    const hasRepo = !!it.repo;
+    const el = document.createElement(hasRepo ? "a" : "div");
+    el.className = "card" + (hasRepo ? "" : " norepo") + (it.w3f ? " w3f" : "");
+    if (hasRepo) { el.href = it.repo; el.target = "_blank"; el.rel = "noopener"; }
+
+    const repoShort = it.repo ? it.repo.replace("https://github.com/", "") : "";
+    const tag = !hasRepo ? `<span class="tag${it.w3f ? " w3f" : ""}">${it.w3f ? "internal" : "no repo"}</span>`
+              : (it.w3f ? `<span class="tag w3f">internal</span>` : "");
+
+    el.innerHTML = `
+      <div class="name"><span class="label">${it.name}</span> ${tag}${hasRepo ? '<span class="arrow">↗</span>' : ""}</div>
+      ${hasRepo ? `<div class="repo">${repoShort}</div>` : ""}
+    `;
+    cards.appendChild(el);
+  });
+
+  board.appendChild(col);
+});
+</script>
+</body>
+</html>
