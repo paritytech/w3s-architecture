@@ -143,7 +143,7 @@ const LAYERS = [
     title: "Test Environment (Chains)",
     sub: "The test network everything else connects to. Must exist before anything.",
     items: [
-      { name: "Polkadot SDK (relay + system chains)", repo: "https://github.com/paritytech/polkadot-sdk" },
+      { name: "Relay Chain + Asset Hub", repo: "https://github.com/paritytech/polkadot-sdk" },
       { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain" },
       { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality" },
     ]
@@ -156,36 +156,49 @@ const LAYERS = [
       { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend" },
       { name: "dotNS", repo: "https://github.com/paritytech/dotns" },
       { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy" },
-      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager" },
     ]
   },
   {
     num: 3,
-    title: "SDKs & Testing",
-    sub: "Client SDKs and the test harness the platform clients are built on.",
-    items: [
-      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks" },
-      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk" },
-      { name: "Testing suite (host-api-test-sdk)", repo: "https://github.com/paritytech/host-api-test-sdk" },
-    ]
-  },
-  {
-    num: 4,
     title: "Platform — Polkadot Triangle",
-    sub: "The clients users run to discover & launch dApps. Depend on SDKs + infra.",
+    sub: "The clients users run to discover & launch dApps.",
     items: [
       { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli" },
       { name: "Polkadot Mobile — iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2" },
       { name: "Polkadot Mobile — Android", repo: "https://github.com/paritytech/polkadot-app-android-v2" },
       { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop" },
-      { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter" },
+    ]
+  },
+  {
+    num: 4,
+    title: "Triangle-js SDK",
+    sub: "Foundation of the SDK chain.",
+    items: [
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks" },
     ]
   },
   {
     num: 5,
+    title: "Product SDK",
+    sub: "Built on the Triangle-js SDK.",
+    items: [
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk" },
+    ]
+  },
+  {
+    num: 6,
+    title: "Contract Dependency Manager",
+    sub: "Built on the Product SDK; consumed by the products.",
+    items: [
+      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager" },
+    ]
+  },
+  {
+    num: 7,
     title: "Apps & Proof-of-Concepts",
     sub: "End-user products, deployed last — they assume the full stack to the right is live.",
     items: [
+      { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter" },
       { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app" },
       { name: "Playground App", repo: "https://github.com/paritytech/playground-app" },
       { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli" },
@@ -211,8 +224,6 @@ LAYERS.forEach((layer, idx) => {
   col.innerHTML = `
     <div class="layer-head">
       <span class="layer-num">${layer.num}</span>
-      <div class="layer-title">${layer.title}</div>
-      <div class="layer-sub">${layer.sub}</div>
     </div>
     <div class="cards"></div>
   `;
