@@ -26,3 +26,10 @@ Triangle-js SDK	triangle-js-sdks	https://github.com/paritytech/triangle-js-sdks
 Product SDK	product-sdk	https://github.com/paritytech/product-sdk
 Polkadot Bulletin Chain	polkadot-bulletin-chain	https://github.com/paritytech/polkadot-bulletin-chain
 Polkadot SDK	polkadot-sdk	https://github.com/paritytech/polkadot-sdk
+RevX	revx	https://github.com/paritytech/revx
+dotNS-CLI	dotns-sdk	https://github.com/paritytech/dotns-sdk/tree/main#
+Simple Survey	simple-survey	https://github.com/paritytech/simple-survey
+Playground App Template	playground-app-template	https://github.com/paritytech/playground-app-template
+Playground Tutorial	playground-tutorial	https://github.com/paritytech/playground-tutorial
+Rock Paper Scissors	Rock-Paper-Scissors	https://github.com/paritytech/Rock-Paper-Scissors
+Feedback Board	feedback-board	https://github.com/paritytech/feedback-board
