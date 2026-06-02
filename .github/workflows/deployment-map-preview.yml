@@ -10,15 +10,12 @@ on:
 permissions:
   contents: read
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   preview:
     name: Generate map diff
     runs-on: ubuntu-latest
-    env:
-      # Set to "png" if GitHub's SVG rendering is less useful in PR comments.
-      PREVIEW_FORMAT: svg
 
     steps:
       - name: Install render tools
@@ -39,56 +36,25 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           path: head
 
-      - name: Generate before and after map assets
+      - name: Compare committed deployment map assets
+        id: asset-diff
         run: |
           set -euo pipefail
 
           mkdir -p preview
 
-          if [[ -x head/scripts/generate.sh ]]; then
-            GENERATE=head/scripts/generate.sh
-          elif [[ -x base/scripts/generate.sh ]]; then
-            GENERATE=base/scripts/generate.sh
-          else
-            echo "No generate.sh found in base or PR checkout" >&2
+          if [[ ! -f base/deployment-map.png || ! -f head/deployment-map.png ]]; then
+            echo "deployment-map.png is missing from base or PR checkout" >&2
             exit 1
           fi
 
-          "$GENERATE" "$PWD/base"
-          "$GENERATE" "$PWD/head"
+          cp base/deployment-map.png preview/main.png
+          cp head/deployment-map.png preview/pr.png
 
-          cp base/deployment-map.png preview/before.png
-          cp head/deployment-map.png preview/after.png
-          if [[ -f base/deployment-map.svg ]]; then cp base/deployment-map.svg preview/before.svg; fi
-          if [[ -f head/deployment-map.svg ]]; then cp head/deployment-map.svg preview/after.svg; fi
-
-      - name: Choose inline preview format
-        id: format
-        run: |
-          set -euo pipefail
-
-          format="$PREVIEW_FORMAT"
-          if [[ "$format" != "svg" && "$format" != "png" ]]; then
-            echo "PREVIEW_FORMAT must be either svg or png" >&2
-            exit 1
-          fi
-
-          if [[ ! -f "base/deployment-map.$format" || ! -f "head/deployment-map.$format" ]]; then
-            echo "deployment-map.$format is missing from base or head; falling back to png"
-            format="png"
-          fi
-
-          echo "format=$format" >> "$GITHUB_OUTPUT"
-
-      - name: Create visual diff
-        id: diff
-        run: |
-          set -euo pipefail
-
-          before_w="$(identify -format '%w' preview/before.png)"
-          before_h="$(identify -format '%h' preview/before.png)"
-          after_w="$(identify -format '%w' preview/after.png)"
-          after_h="$(identify -format '%h' preview/after.png)"
+          before_w="$(identify -format '%w' preview/main.png)"
+          before_h="$(identify -format '%h' preview/main.png)"
+          after_w="$(identify -format '%w' preview/pr.png)"
+          after_h="$(identify -format '%h' preview/pr.png)"
 
           width="$before_w"
           if (( after_w > width )); then width="$after_w"; fi
@@ -96,13 +62,56 @@ jobs:
           height="$before_h"
           if (( after_h > height )); then height="$after_h"; fi
 
-          convert preview/before.png -background '#f5f5f7' -gravity northwest -extent "${width}x${height}" preview/before-normalized.png
-          convert preview/after.png -background '#f5f5f7' -gravity northwest -extent "${width}x${height}" preview/after-normalized.png
+          convert preview/main.png -background '#f5f5f7' -gravity northwest -extent "${width}x${height}" preview/main-normalized.png
+          convert preview/pr.png -background '#f5f5f7' -gravity northwest -extent "${width}x${height}" preview/pr-normalized.png
 
-          compare -metric AE preview/before-normalized.png preview/after-normalized.png preview/diff.png 2> preview/changed-pixels.txt || true
+          set +e
+          compare -metric AE preview/main-normalized.png preview/pr-normalized.png preview/diff.png 2> preview/changed-pixels.txt
+          compare_status="$?"
+          set -e
+
+          if (( compare_status > 1 )); then
+            exit "$compare_status"
+          fi
 
           changed_pixels="$(cat preview/changed-pixels.txt)"
-          echo "changed_pixels=${changed_pixels:-0}" >> "$GITHUB_OUTPUT"
+          changed_pixels="${changed_pixels:-0}"
+
+          if [[ "$changed_pixels" == "0" ]]; then
+            echo "asset_diff=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "asset_diff=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "changed_pixels=$changed_pixels" >> "$GITHUB_OUTPUT"
+
+      - name: Check generated deployment map assets
+        id: generated-assets
+        run: |
+          set -euo pipefail
+
+          if [[ ! -x head/scripts/generate.sh ]]; then
+            echo "scripts/generate.sh is missing or not executable in the PR checkout" >&2
+            exit 1
+          fi
+
+          cp head/deployment-map.png preview/committed-pr.png
+          if [[ -f head/deployment-map.svg ]]; then
+            cp head/deployment-map.svg preview/committed-pr.svg
+          fi
+
+          head/scripts/generate.sh "$PWD/head"
+
+          cp head/deployment-map.png preview/generated-pr.png
+          if [[ -f head/deployment-map.svg ]]; then
+            cp head/deployment-map.svg preview/generated-pr.svg
+          fi
+
+          if git -C head diff --quiet -- deployment-map.png deployment-map.svg; then
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          else
+            git -C head diff --name-only -- deployment-map.png deployment-map.svg > preview/stale-export-assets.txt
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload generated assets
         id: upload
@@ -117,8 +126,9 @@ jobs:
         uses: actions/github-script@v7
         env:
           ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
-          CHANGED_PIXELS: ${{ steps.diff.outputs.changed_pixels }}
-          PREVIEW_FORMAT: ${{ steps.format.outputs.format }}
+          ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
+          CHANGED_PIXELS: ${{ steps.asset-diff.outputs.changed_pixels }}
+          EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
         with:
           script: |
             const marker = "<!-- deployment-map-preview -->";
@@ -127,26 +137,40 @@ jobs:
             const baseSha = pr.base.sha;
             const headSha = pr.head.sha;
             const headRepo = pr.head.repo.full_name;
-            const previewFormat = process.env.PREVIEW_FORMAT || "svg";
 
-            const beforeUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${baseSha}/deployment-map.${previewFormat}`;
-            const afterUrl = `https://raw.githubusercontent.com/${headRepo}/${headSha}/deployment-map.${previewFormat}`;
-            const changedPixels = process.env.CHANGED_PIXELS || "0";
+            const beforeUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${baseSha}/deployment-map.png`;
+            const afterUrl = `https://raw.githubusercontent.com/${headRepo}/${headSha}/deployment-map.png`;
             const artifactUrl = process.env.ARTIFACT_URL;
+            const assetDiff = process.env.ASSET_DIFF === "true";
+            const changedPixels = process.env.CHANGED_PIXELS || "0";
+            const exportStale = process.env.EXPORT_STALE === "true";
 
-            const body = `${marker}
-            ### Deployment Map Preview
-
-            Inline preview format: \`${previewFormat}\`
-            Changed pixels in generated visual diff: \`${changedPixels}\`
-
-            | Before | After |
-            | --- | --- |
-            | <img src="${beforeUrl}" width="420" alt="Deployment map before" /> | <img src="${afterUrl}" width="420" alt="Deployment map after" /> |
-
-            [Download generated before/after assets and visual diff](${artifactUrl})
-
-            _The inline images are checked-in deployment-map.${previewFormat} files at the base and PR commits. The artifact contains freshly generated SVG/PNG assets and the generated visual diff for this workflow run._`;
+            const body = [
+              marker,
+              "### Deployment Map Preview",
+              "",
+              ...(assetDiff
+                ? [
+                    `Deployment Map Asset diff detected (${changedPixels} changed pixels).`,
+                    "",
+                    "| Main | PR |",
+                    "| --- | --- |",
+                    `| <img src="${beforeUrl}" width="420" alt="Deployment map on main" /> | <img src="${afterUrl}" width="420" alt="Deployment map on PR" /> |`,
+                    "",
+                    `[Download the generated difference image and assets](${artifactUrl})`,
+                  ]
+                : [
+                    "no Deployment Map Asset diff detected",
+                    "",
+                    `[Download generated assets](${artifactUrl})`,
+                  ]),
+              ...(exportStale
+                ? [
+                    "",
+                    "⚠️ Please run `bash scripts/generate.sh` to sync Deployment Map export assets!",
+                  ]
+                : []),
+            ].join("\n");
 
             const comments = await github.rest.issues.listComments({
               owner,
