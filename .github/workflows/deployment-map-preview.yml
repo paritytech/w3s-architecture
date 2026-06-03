@@ -1,4 +1,4 @@
-name: Deployment Map Preview
+name: Open Sourcing Map Preview
 
 on:
   pull_request:
@@ -36,7 +36,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           path: head
 
-      - name: Compare committed deployment map assets
+      - name: Compare committed open sourcing map assets
         id: asset-diff
         run: |
           set -euo pipefail
@@ -57,7 +57,7 @@ jobs:
             echo "asset_diff=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check generated deployment map assets
+      - name: Check generated open sourcing map assets
         id: generated-assets
         run: |
           set -euo pipefail
@@ -86,7 +86,7 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: deployment-map-preview-pr-${{ github.event.pull_request.number }}
+          name: open-sourcing-map-preview-pr-${{ github.event.pull_request.number }}
           path: preview/
           if-no-files-found: error
           retention-days: 14
@@ -99,7 +99,7 @@ jobs:
           EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
         with:
           script: |
-            const marker = "<!-- deployment-map-preview -->";
+            const marker = "<!-- open-sourcing-map-preview -->";
             const { owner, repo } = context.repo;
             const pr = context.payload.pull_request;
             const baseSha = pr.base.sha;
@@ -114,31 +114,31 @@ jobs:
 
             const body = [
               marker,
-              "### Deployment Map Preview",
+              "### Open Sourcing Map Preview",
               "",
               ...(assetDiff
                 ? [
-                    "Deployment Map Asset diff detected.",
+                    "Open Sourcing Map Asset diff detected.",
                     "",
                     "**Before (main)**",
                     "",
-                    `<img src="${beforeUrl}" width="900" alt="Deployment map before" />`,
+                    `<img src="${beforeUrl}" width="900" alt="Open sourcing map before" />`,
                     "",
                     "**After (PR)**",
                     "",
-                    `<img src="${afterUrl}" width="900" alt="Deployment map after" />`,
+                    `<img src="${afterUrl}" width="900" alt="Open sourcing map after" />`,
                     "",
                     `[Download generated assets](${artifactUrl})`,
                   ]
                 : [
-                    "no Deployment Map Asset diff detected",
+                    "no Open Sourcing Map Asset diff detected",
                     "",
                     `[Download generated assets](${artifactUrl})`,
                   ]),
               ...(exportStale
                 ? [
                     "",
-                    "❌ Please run `bash scripts/generate.sh` to sync Deployment Map export assets!",
+                    "❌ Please run `bash scripts/generate.sh` to sync Open Sourcing Map export assets!",
                   ]
                 : []),
             ].join("\n");
