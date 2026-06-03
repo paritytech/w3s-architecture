@@ -1,0 +1,56 @@
+# W3S Architecture
+
+![Polkadot Product Ecosystem E2E Deployment Map](assets/deployment-map.svg)
+
+This repo tracks the W3S deployment dependency map and the related repository list used to inspect/reference project sources.
+
+## Map Workflow
+
+The map source of truth is `deployment-map.html`. The generated exports live in `assets/`:
+
+- `assets/deployment-map.svg`
+- `assets/deployment-map.png`
+
+When you edit the map, update the `LAYERS` array in `deployment-map.html`, then regenerate the exports:
+
+```sh
+bash scripts/generate.sh
+```
+
+The PR workflow compares the committed SVG export against `main`, comments a before/after preview, and fails if `assets/deployment-map.svg` is out of sync with `deployment-map.html`.
+
+## Adding Map Items
+
+Add lanes or items in the `LAYERS` array in `deployment-map.html`.
+
+Item fields:
+
+- `name`: display name on the board.
+- `repo`: GitHub URL, or `null` when there is no repo yet.
+- `w3f`: set to `true` for internally deployed items.
+- `deployDoc`: link to the deployment document when one exists.
+
+Items without `deployDoc` get the red `!` missing deploy doc badge. Items with `repo: null` get the `no repo` label.
+
+## Repository List
+
+`repos.csv` tracks repo name/URL pairs used by the clone script. It has three columns:
+
+```csv
+name,repo_name,url
+```
+
+When adding a new repo-backed map item, also add it to `repos.csv`.
+
+## Scripts
+
+`scripts/generate.sh` regenerates both deployment map exports from `deployment-map.html`.
+
+`scripts/clone_all.sh` clones the unique repositories from `repos.csv` into `./reference-repos` over HTTPS, in parallel. `reference-repos/` is ignored by git.
+
+```sh
+bash scripts/clone_all.sh
+JOBS=16 bash scripts/clone_all.sh
+```
+
+`scripts/utils/generate-svg.js` is the SVG generator used by `scripts/generate.sh`; normally call `scripts/generate.sh` instead of running it directly.
