@@ -1,10 +1,11 @@
-// Generates deployment-map.svg from the LAYERS data embedded in deployment-map.html.
+// Generates assets/deployment-map.svg from the LAYERS data embedded in deployment-map.html.
 // Run: node scripts/utils/generate-svg.js
-// To refresh both deployment-map.svg and deployment-map.png, run: scripts/generate.sh
+// To refresh both assets/deployment-map.svg and assets/deployment-map.png, run: scripts/generate.sh
 const fs = require("fs");
 const path = require("path");
 
 const rootDir = path.resolve(__dirname, "../..");
+const assetDir = path.join(rootDir, "assets");
 const html = fs.readFileSync(path.join(rootDir, "deployment-map.html"), "utf8");
 const m = html.match(/const LAYERS = ([\s\S]*?\];)/);
 if (!m) throw new Error("Could not find LAYERS array in deployment-map.html");
@@ -156,5 +157,6 @@ LAYERS.forEach((layer, i) => {
 
 parts.push(`</svg>`);
 
-fs.writeFileSync(path.join(rootDir, "deployment-map.svg"), parts.join("\n"));
-console.log(`Wrote deployment-map.svg (${boardW}×${boardH})`);
+fs.mkdirSync(assetDir, { recursive: true });
+fs.writeFileSync(path.join(assetDir, "deployment-map.svg"), parts.join("\n"));
+console.log(`Wrote assets/deployment-map.svg (${boardW}×${boardH})`);

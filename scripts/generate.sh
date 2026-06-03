@@ -12,8 +12,9 @@ else
   ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
-SVG_PATH="$ROOT_DIR/deployment-map.svg"
-PNG_PATH="$ROOT_DIR/deployment-map.png"
+ASSET_DIR="$ROOT_DIR/assets"
+SVG_PATH="$ASSET_DIR/deployment-map.svg"
+PNG_PATH="$ASSET_DIR/deployment-map.png"
 GENERATOR="$ROOT_DIR/scripts/utils/generate-svg.js"
 LEGACY_GENERATOR="$ROOT_DIR/generate-svg.js"
 
@@ -23,13 +24,15 @@ fi
 
 if [[ ! -f "$GENERATOR" ]]; then
   if [[ -f "$PNG_PATH" ]]; then
-    echo "No SVG generator found in $ROOT_DIR; using existing deployment-map.png"
+    echo "No SVG generator found in $ROOT_DIR; using existing assets/deployment-map.png"
     exit 0
   fi
 
-  echo "No SVG generator or deployment-map.png found in $ROOT_DIR" >&2
+  echo "No SVG generator or assets/deployment-map.png found in $ROOT_DIR" >&2
   exit 1
 fi
+
+mkdir -p "$ASSET_DIR"
 
 (cd "$ROOT_DIR" && node "$GENERATOR")
 

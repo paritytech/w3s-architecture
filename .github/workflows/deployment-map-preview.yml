@@ -43,32 +43,15 @@ jobs:
 
           mkdir -p preview
 
-          before_asset="deployment-map.svg"
-          if [[ ! -f "base/$before_asset" ]]; then
-            before_asset="deployment-map.png"
-          fi
-
-          after_asset="deployment-map.svg"
-          if [[ ! -f "head/$after_asset" ]]; then
-            after_asset="deployment-map.png"
-          fi
-
-          echo "before_asset=$before_asset" >> "$GITHUB_OUTPUT"
-          echo "after_asset=$after_asset" >> "$GITHUB_OUTPUT"
-
-          if [[ -f base/deployment-map.svg && -f head/deployment-map.svg ]]; then
-            compare_asset="deployment-map.svg"
-          elif [[ -f base/deployment-map.png && -f head/deployment-map.png ]]; then
-            compare_asset="deployment-map.png"
-          else
-            echo "No comparable deployment map asset found in base and PR checkouts" >&2
+          if [[ ! -f base/assets/deployment-map.svg || ! -f head/assets/deployment-map.svg ]]; then
+            echo "assets/deployment-map.svg is missing from base or PR checkout" >&2
             exit 1
           fi
 
-          cp "base/$before_asset" "preview/main.${before_asset##*.}"
-          cp "head/$after_asset" "preview/pr.${after_asset##*.}"
+          cp base/assets/deployment-map.svg preview/main.svg
+          cp head/assets/deployment-map.svg preview/pr.svg
 
-          if cmp -s "base/$compare_asset" "head/$compare_asset"; then
+          if cmp -s base/assets/deployment-map.svg head/assets/deployment-map.svg; then
             echo "asset_diff=false" >> "$GITHUB_OUTPUT"
           else
             echo "asset_diff=true" >> "$GITHUB_OUTPUT"
@@ -84,22 +67,18 @@ jobs:
             exit 1
           fi
 
-          cp head/deployment-map.png preview/committed-pr.png
-          if [[ -f head/deployment-map.svg ]]; then
-            cp head/deployment-map.svg preview/committed-pr.svg
-          fi
+          cp head/assets/deployment-map.svg preview/committed-pr.svg
+          cp head/assets/deployment-map.png preview/committed-pr.png
 
           head/scripts/generate.sh "$PWD/head"
 
-          cp head/deployment-map.png preview/generated-pr.png
-          if [[ -f head/deployment-map.svg ]]; then
-            cp head/deployment-map.svg preview/generated-pr.svg
-          fi
+          cp head/assets/deployment-map.svg preview/generated-pr.svg
+          cp head/assets/deployment-map.png preview/generated-pr.png
 
-          if git -C head diff --quiet -- deployment-map.svg; then
+          if git -C head diff --quiet -- assets/deployment-map.svg; then
             echo "stale=false" >> "$GITHUB_OUTPUT"
           else
-            git -C head diff --name-only -- deployment-map.svg > preview/stale-export-assets.txt
+            git -C head diff --name-only -- assets/deployment-map.svg > preview/stale-export-assets.txt
             echo "stale=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -117,8 +96,6 @@ jobs:
         env:
           ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
           ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
-          BEFORE_ASSET: ${{ steps.asset-diff.outputs.before_asset }}
-          AFTER_ASSET: ${{ steps.asset-diff.outputs.after_asset }}
           EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
         with:
           script: |
@@ -128,11 +105,9 @@ jobs:
             const baseSha = pr.base.sha;
             const headSha = pr.head.sha;
             const headRepo = pr.head.repo.full_name;
-            const beforeAsset = process.env.BEFORE_ASSET || "deployment-map.svg";
-            const afterAsset = process.env.AFTER_ASSET || "deployment-map.svg";
 
-            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/${beforeAsset}?raw=1`;
-            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/${afterAsset}?raw=1`;
+            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/assets/deployment-map.svg?raw=1`;
+            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/assets/deployment-map.svg?raw=1`;
             const artifactUrl = process.env.ARTIFACT_URL;
             const assetDiff = process.env.ASSET_DIFF === "true";
             const exportStale = process.env.EXPORT_STALE === "true";
@@ -163,7 +138,7 @@ jobs:
               ...(exportStale
                 ? [
                     "",
-                    "⚠️ Please run `bash scripts/generate.sh` to sync Deployment Map export assets!",
+                    "❌ Please run `bash scripts/generate.sh` to sync Deployment Map export assets!",
                   ]
                 : []),
             ].join("\n");
@@ -194,3 +169,9 @@ jobs:
                 body,
               });
             }
+
+      - name: Fail if generated SVG is stale
+        if: steps.generated-assets.outputs.stale == 'true'
+        run: |
+          echo "assets/deployment-map.svg is out of sync. Run bash scripts/generate.sh and commit the result." >&2
+          exit 1
