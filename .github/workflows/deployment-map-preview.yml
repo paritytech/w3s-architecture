@@ -21,7 +21,7 @@ jobs:
       - name: Install render tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends imagemagick librsvg2-bin
+          sudo apt-get install -y --no-install-recommends librsvg2-bin
 
       - name: Checkout base
         uses: actions/checkout@v4
@@ -43,42 +43,35 @@ jobs:
 
           mkdir -p preview
 
-          if [[ ! -f base/deployment-map.png || ! -f head/deployment-map.png ]]; then
-            echo "deployment-map.png is missing from base or PR checkout" >&2
+          before_asset="deployment-map.svg"
+          if [[ ! -f "base/$before_asset" ]]; then
+            before_asset="deployment-map.png"
+          fi
+
+          after_asset="deployment-map.svg"
+          if [[ ! -f "head/$after_asset" ]]; then
+            after_asset="deployment-map.png"
+          fi
+
+          echo "before_asset=$before_asset" >> "$GITHUB_OUTPUT"
+          echo "after_asset=$after_asset" >> "$GITHUB_OUTPUT"
+
+          if [[ -f base/deployment-map.svg && -f head/deployment-map.svg ]]; then
+            compare_asset="deployment-map.svg"
+          elif [[ -f base/deployment-map.png && -f head/deployment-map.png ]]; then
+            compare_asset="deployment-map.png"
+          else
+            echo "No comparable deployment map asset found in base and PR checkouts" >&2
             exit 1
           fi
 
-          cp base/deployment-map.png preview/main.png
-          cp head/deployment-map.png preview/pr.png
+          cp "base/$before_asset" "preview/main.${before_asset##*.}"
+          cp "head/$after_asset" "preview/pr.${after_asset##*.}"
 
-          if cmp -s preview/main.png preview/pr.png; then
+          if cmp -s "base/$compare_asset" "head/$compare_asset"; then
             echo "asset_diff=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "asset_diff=true" >> "$GITHUB_OUTPUT"
-
-          before_w="$(identify -format '%w' preview/main.png)"
-          before_h="$(identify -format '%h' preview/main.png)"
-          after_w="$(identify -format '%w' preview/pr.png)"
-          after_h="$(identify -format '%h' preview/pr.png)"
-
-          width="$before_w"
-          if (( after_w > width )); then width="$after_w"; fi
-
-          height="$before_h"
-          if (( after_h > height )); then height="$after_h"; fi
-
-          convert preview/main.png -background '#f5f5f7' -gravity northwest -extent "${width}x${height}" preview/main-normalized.png
-          convert preview/pr.png -background '#f5f5f7' -gravity northwest -extent "${width}x${height}" preview/pr-normalized.png
-
-          set +e
-          compare -metric AE preview/main-normalized.png preview/pr-normalized.png preview/diff.png 2> preview/changed-pixels.txt
-          compare_status="$?"
-          set -e
-
-          if (( compare_status > 1 )); then
-            exit "$compare_status"
+          else
+            echo "asset_diff=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check generated deployment map assets
@@ -124,6 +117,8 @@ jobs:
         env:
           ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
           ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
+          BEFORE_ASSET: ${{ steps.asset-diff.outputs.before_asset }}
+          AFTER_ASSET: ${{ steps.asset-diff.outputs.after_asset }}
           EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
         with:
           script: |
@@ -133,9 +128,11 @@ jobs:
             const baseSha = pr.base.sha;
             const headSha = pr.head.sha;
             const headRepo = pr.head.repo.full_name;
+            const beforeAsset = process.env.BEFORE_ASSET || "deployment-map.svg";
+            const afterAsset = process.env.AFTER_ASSET || "deployment-map.svg";
 
-            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/deployment-map.png?raw=1`;
-            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/deployment-map.png?raw=1`;
+            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/${beforeAsset}?raw=1`;
+            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/${afterAsset}?raw=1`;
             const artifactUrl = process.env.ARTIFACT_URL;
             const assetDiff = process.env.ASSET_DIFF === "true";
             const exportStale = process.env.EXPORT_STALE === "true";
@@ -156,7 +153,7 @@ jobs:
                     "",
                     `<img src="${afterUrl}" width="900" alt="Deployment map after" />`,
                     "",
-                    `[Download the generated difference image and assets](${artifactUrl})`,
+                    `[Download generated assets](${artifactUrl})`,
                   ]
                 : [
                     "no Deployment Map Asset diff detected",

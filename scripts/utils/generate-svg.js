@@ -134,20 +134,22 @@ LAYERS.forEach((layer, i) => {
       );
     }
 
-    // tag (top-right): internal or no repo
-    const tagText = !hasRepo && !isInt ? "no repo" : isInt ? "internal" : "";
-    if (tagText) {
-      const tagW = tagText.length * 6.2 + 12;
-      const tagColor = tagText === "internal" ? C.gray : C.warn;
-      const tagY = hasRepo ? y + 9 : y + CARD_H - 23;
+    // tags
+    const tags = [
+      !hasRepo ? { text: "no repo", color: C.warn } : null,
+      isInt ? { text: "internal", color: C.gray } : null,
+    ].filter(Boolean);
+    tags.forEach((tag, k) => {
+      const tagW = tag.text.length * 6.2 + 12;
+      const tagY = hasRepo ? y + 9 + k * 18 : y + CARD_H - 23 - (tags.length - 1 - k) * 18;
       parts.push(
-        `<rect x="${cx + CARD_W - tagW - 11}" y="${tagY}" width="${tagW}" height="16" rx="5" fill="${tagColor}"/>`
+        `<rect x="${cx + CARD_W - tagW - 11}" y="${tagY}" width="${tagW}" height="16" rx="5" fill="${tag.color}"/>`
       );
       parts.push(
         `<text x="${cx + CARD_W - tagW / 2 - 11}" y="${tagY + 11.5}" text-anchor="middle" ` +
-        `font-size="9.5" font-weight="700" fill="#fff" letter-spacing="0.4">${esc(tagText)}</text>`
+        `font-size="9.5" font-weight="700" fill="#fff" letter-spacing="0.4">${esc(tag.text)}</text>`
       );
-    }
+    });
     parts.push(close);
   });
 });
