@@ -51,6 +51,13 @@ jobs:
           cp base/deployment-map.png preview/main.png
           cp head/deployment-map.png preview/pr.png
 
+          if cmp -s preview/main.png preview/pr.png; then
+            echo "asset_diff=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "asset_diff=true" >> "$GITHUB_OUTPUT"
+
           before_w="$(identify -format '%w' preview/main.png)"
           before_h="$(identify -format '%h' preview/main.png)"
           after_w="$(identify -format '%w' preview/pr.png)"
@@ -74,16 +81,6 @@ jobs:
             exit "$compare_status"
           fi
 
-          changed_pixels="$(cat preview/changed-pixels.txt)"
-          changed_pixels="${changed_pixels:-0}"
-
-          if [[ "$changed_pixels" == "0" ]]; then
-            echo "asset_diff=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "asset_diff=true" >> "$GITHUB_OUTPUT"
-          fi
-          echo "changed_pixels=$changed_pixels" >> "$GITHUB_OUTPUT"
-
       - name: Check generated deployment map assets
         id: generated-assets
         run: |
@@ -106,10 +103,10 @@ jobs:
             cp head/deployment-map.svg preview/generated-pr.svg
           fi
 
-          if git -C head diff --quiet -- deployment-map.png deployment-map.svg; then
+          if git -C head diff --quiet -- deployment-map.svg; then
             echo "stale=false" >> "$GITHUB_OUTPUT"
           else
-            git -C head diff --name-only -- deployment-map.png deployment-map.svg > preview/stale-export-assets.txt
+            git -C head diff --name-only -- deployment-map.svg > preview/stale-export-assets.txt
             echo "stale=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -127,7 +124,6 @@ jobs:
         env:
           ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
           ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
-          CHANGED_PIXELS: ${{ steps.asset-diff.outputs.changed_pixels }}
           EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
         with:
           script: |
@@ -138,11 +134,10 @@ jobs:
             const headSha = pr.head.sha;
             const headRepo = pr.head.repo.full_name;
 
-            const beforeUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${baseSha}/deployment-map.png`;
-            const afterUrl = `https://raw.githubusercontent.com/${headRepo}/${headSha}/deployment-map.png`;
+            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/deployment-map.png?raw=1`;
+            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/deployment-map.png?raw=1`;
             const artifactUrl = process.env.ARTIFACT_URL;
             const assetDiff = process.env.ASSET_DIFF === "true";
-            const changedPixels = process.env.CHANGED_PIXELS || "0";
             const exportStale = process.env.EXPORT_STALE === "true";
 
             const body = [
@@ -151,11 +146,15 @@ jobs:
               "",
               ...(assetDiff
                 ? [
-                    `Deployment Map Asset diff detected (${changedPixels} changed pixels).`,
+                    "Deployment Map Asset diff detected.",
                     "",
-                    "| Main | PR |",
-                    "| --- | --- |",
-                    `| <img src="${beforeUrl}" width="420" alt="Deployment map on main" /> | <img src="${afterUrl}" width="420" alt="Deployment map on PR" /> |`,
+                    "**Before (main)**",
+                    "",
+                    `<img src="${beforeUrl}" width="900" alt="Deployment map before" />`,
+                    "",
+                    "**After (PR)**",
+                    "",
+                    `<img src="${afterUrl}" width="900" alt="Deployment map after" />`,
                     "",
                     `[Download the generated difference image and assets](${artifactUrl})`,
                   ]
