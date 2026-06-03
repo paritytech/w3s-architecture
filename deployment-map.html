@@ -220,6 +220,7 @@ const LAYERS = [
     items: [
       { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks" },
       { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk" },
+      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk" },
     ]
   },
   {
@@ -246,6 +247,7 @@ const LAYERS = [
     title: "Mobile Review Prerequisites",
     sub: "Products/config values mobile apps need available for app-store review.",
     items: [
+      { name: "Attestation Protocol", repo: "https://github.com/paritytech/attestation-protocol" },
       { name: "Browse.dot", repo: "https://github.com/paritytech/browse" },
       { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app" },
       { name: "W3S Coin", repo: null, w3f: true },
@@ -314,7 +316,7 @@ LAYERS.forEach((layer, idx) => {
     el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
     if (clickTarget) { el.href = clickTarget; el.target = "_blank"; el.rel = "noopener"; }
 
-    const repoShort = it.repo ? it.repo.replace("https://github.com/", "") : "";
+    const repoShort = it.repo ? (it.repoLabel || it.repo.replace("https://github.com/", "")) : "";
     const tags = [
       !hasRepo ? `<span class="tag">no repo</span>` : "",
       it.w3f ? `<span class="tag w3f">internal</span>` : "",
