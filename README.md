@@ -1,8 +1,8 @@
 # W3S Architecture
 
-![Polkadot Product Ecosystem E2E Deployment Map](assets/deployment-map.svg)
+![Polkadot Product Ecosystem Open Sourcing Map](assets/deployment-map.svg)
 
-This repo tracks the W3S deployment dependency map and the related repository list used to inspect/reference project sources.
+This repo tracks the W3S open sourcing map and the related repository list used to inspect/reference project sources.
 
 ## Map Workflow
 
@@ -44,7 +44,7 @@ When adding a new repo-backed map item, also add it to `repos.csv`.
 
 ## Scripts
 
-`scripts/generate.sh` regenerates both deployment map exports from `deployment-map.html`.
+`scripts/generate.sh` regenerates both open sourcing map exports from `deployment-map.html`.
 
 `scripts/clone_all.sh` clones the unique repositories from `repos.csv` into `./reference-repos` over HTTPS, in parallel. `reference-repos/` is ignored by git.
 

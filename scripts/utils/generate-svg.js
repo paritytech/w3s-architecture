@@ -52,7 +52,7 @@ parts.push(`<rect width="${boardW}" height="${boardH}" fill="${C.paper}"/>`);
 parts.push(`<circle cx="${PAD + 7}" cy="${PAD + 4}" r="7" fill="${C.pink}"/>`);
 parts.push(
   `<text x="${PAD + 24}" y="${PAD + 10}" font-size="22" font-weight="700" fill="${C.ink}" ` +
-  `letter-spacing="-0.3">Polkadot Product Ecosystem E2E Deployment Map</text>`
+  `letter-spacing="-0.3">Polkadot Product Ecosystem Open Sourcing Map</text>`
 );
 // legend
 const legendY = PAD + 40;
