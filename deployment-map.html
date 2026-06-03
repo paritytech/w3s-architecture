@@ -15,6 +15,8 @@
     --line: #d9d9e0;
     --warn: #b25b00;
     --warn-bg: #fff4e3;
+    --source-warn: #f4c430;
+    --source-warn-text: #4a3000;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -67,7 +69,32 @@
     line-height: 1;
     z-index: 2;
   }
+  .opensource-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--source-warn);
+    color: var(--source-warn-text);
+    border: 2px solid var(--paper);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    z-index: 2;
+  }
   .legend .doc-badge {
+    position: static;
+    width: 16px;
+    height: 16px;
+    border-width: 0;
+    font-size: 11px;
+  }
+  .legend .opensource-badge {
     position: static;
     width: 16px;
     height: 16px;
@@ -175,6 +202,7 @@
     <span><i class="chip repo"></i> Repo + instructions available</span>
     <span><i class="chip norepo"></i> No repo yet — handoff gap</span>
     <span><i class="doc-badge">!</i> Missing deploy doc</span>
+    <span><i class="opensource-badge">!</i> Not open source yet</span>
     <span><i class="chip w3f"></i> Deployed internally</span>
   </div>
 </header>
@@ -189,10 +217,10 @@ const LAYERS = [
     title: "Test Environment + Meta Setup",
     sub: "The chains and deployment prerequisites everything else depends on.",
     items: [
-      { name: "Relay Chain + Asset Hub", repo: "https://github.com/paritytech/polkadot-sdk", w3f: true, deployDoc: "NA" },
-      { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain", w3f: true, deployDoc: "NA" },
-      { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality", w3f: true, deployDoc: "NA" },
-      { name: "RevX", repo: "https://github.com/paritytech/revx", w3f: true, deployDoc: "NA" },
+      { name: "Relay Chain + Asset Hub", repo: "https://github.com/paritytech/polkadot-sdk", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality", w3f: true, deployDoc: "NA", openSource: false },
+      { name: "RevX", repo: "https://github.com/paritytech/revx", w3f: true, deployDoc: "NA", openSource: false },
     ]
   },
   {
@@ -200,7 +228,7 @@ const LAYERS = [
     title: "Deployer Funding",
     sub: "Funding and account setup needed before first contract deployments.",
     items: [
-      { name: "Deployer Funding Instructions", repo: null },
+      { name: "Deployer Funding Instructions", repo: null, openSource: false },
     ]
   },
   {
@@ -208,9 +236,9 @@ const LAYERS = [
     title: "Core Infrastructure",
     sub: "Backend services and on-chain plumbing the platform and apps call into.",
     items: [
-      { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend" },
-      { name: "dotNS", repo: "https://github.com/paritytech/dotns" },
-      { name: "dotNS-CLI", repo: "https://github.com/paritytech/dotns-sdk/tree/main#" },
+      { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend", openSource: false },
+      { name: "dotNS", repo: "https://github.com/paritytech/dotns", openSource: false },
+      { name: "dotNS-CLI", repo: "https://github.com/paritytech/dotns-sdk/tree/main#", openSource: true },
     ]
   },
   {
@@ -218,9 +246,9 @@ const LAYERS = [
     title: "SDKs / Developer Packages",
     sub: "Packages that downstream deploy tooling, clients, and apps consume.",
     items: [
-      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks" },
-      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk" },
-      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk" },
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", openSource: false },
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", openSource: false },
+      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", openSource: false },
     ]
   },
   {
@@ -228,9 +256,9 @@ const LAYERS = [
     title: "Deploy Tooling / Shared Services",
     sub: "Reusable deployment tools and workflows used by later repositories.",
     items: [
-      { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy" },
-      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager", deployDoc: "https://github.com/paritytech/contract-dependency-manager/blob/main/DEPLOY_DOC.md" },
-      { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli" },
+      { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy", openSource: false },
+      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager", deployDoc: "https://github.com/paritytech/contract-dependency-manager/blob/main/DEPLOY_DOC.md", openSource: true },
+      { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli", openSource: true },
     ]
   },
   {
@@ -238,8 +266,8 @@ const LAYERS = [
     title: "Platform Web / Desktop",
     sub: "Triangle clients that can be deployed before mobile app-store review.",
     items: [
-      { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli" },
-      { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop" },
+      { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli", openSource: false },
+      { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop", openSource: false },
     ]
   },
   {
@@ -247,10 +275,10 @@ const LAYERS = [
     title: "Mobile Review Prerequisites",
     sub: "Products/config values mobile apps need available for app-store review.",
     items: [
-      { name: "Attestation Protocol", repo: "https://github.com/paritytech/attestation-protocol" },
-      { name: "Browse.dot", repo: "https://github.com/paritytech/browse" },
-      { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app" },
-      { name: "W3S Coin", repo: null, w3f: true },
+      { name: "Attestation Protocol", repo: "https://github.com/paritytech/attestation-protocol", openSource: false },
+      { name: "Browse.dot", repo: "https://github.com/paritytech/browse", openSource: false },
+      { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app", openSource: false },
+      { name: "W3S Coin", repo: null, w3f: true, openSource: false },
     ]
   },
   {
@@ -258,8 +286,8 @@ const LAYERS = [
     title: "Mobile Apps",
     sub: "Mobile clients after review prerequisites and platform building blocks exist.",
     items: [
-      { name: "Polkadot Mobile - iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2" },
-      { name: "Polkadot Mobile - Android", repo: "https://github.com/paritytech/polkadot-app-android-v2" },
+      { name: "Polkadot Mobile - iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2", openSource: false },
+      { name: "Polkadot Mobile - Android", repo: "https://github.com/paritytech/polkadot-app-android-v2", openSource: false },
     ]
   },
   {
@@ -267,15 +295,15 @@ const LAYERS = [
     title: "Reference Implementations / Prototypes",
     sub: "End-user products and prototypes that consume the platform/tooling stack.",
     items: [
-      { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter" },
-      { name: "Playground App", repo: "https://github.com/paritytech/playground-app" },
-      { name: "Playground Constellation", repo: "https://github.com/paritytech/playground-constellation" },
-      { name: "T3rminal", repo: "https://github.com/paritytech/t3rminal" },
-      { name: "LocalDot", repo: "https://github.com/paritytech/p2p-market" },
-      { name: "LinkTr33", repo: "https://github.com/paritytech/linktr33" },
-      { name: "Sit3Drop", repo: "https://github.com/paritytech/dotdot-deployer" },
-      { name: "Mercado", repo: "https://github.com/paritytech/mercado" },
-      { name: "W3S Ticketing", repo: "https://github.com/paritytech/tick3t", w3f: true },
+      { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter", openSource: false },
+      { name: "Playground App", repo: "https://github.com/paritytech/playground-app", openSource: false },
+      { name: "Playground Constellation", repo: "https://github.com/paritytech/playground-constellation", openSource: false },
+      { name: "T3rminal", repo: "https://github.com/paritytech/t3rminal", openSource: false },
+      { name: "LocalDot", repo: "https://github.com/paritytech/p2p-market", openSource: false },
+      { name: "LinkTr33", repo: "https://github.com/paritytech/linktr33", openSource: false },
+      { name: "Sit3Drop", repo: "https://github.com/paritytech/dotdot-deployer", openSource: false },
+      { name: "Mercado", repo: "https://github.com/paritytech/mercado", openSource: false },
+      { name: "W3S Ticketing", repo: "https://github.com/paritytech/tick3t", w3f: true, openSource: false },
     ]
   },
   {
@@ -283,11 +311,11 @@ const LAYERS = [
     title: "Playground Sample Apps",
     sub: "Sample/template deployments that come after the Playground App.",
     items: [
-      { name: "Simple Survey", repo: "https://github.com/paritytech/simple-survey" },
-      { name: "Playground App Template", repo: "https://github.com/paritytech/playground-app-template" },
-      { name: "Playground Tutorial", repo: "https://github.com/paritytech/playground-tutorial" },
-      { name: "Rock Paper Scissors", repo: "https://github.com/paritytech/Rock-Paper-Scissors" },
-      { name: "Feedback Board", repo: "https://github.com/paritytech/feedback-board" },
+      { name: "Simple Survey", repo: "https://github.com/paritytech/simple-survey", openSource: true },
+      { name: "Playground App Template", repo: "https://github.com/paritytech/playground-app-template", openSource: true },
+      { name: "Playground Tutorial", repo: "https://github.com/paritytech/playground-tutorial", openSource: true },
+      { name: "Rock Paper Scissors", repo: "https://github.com/paritytech/Rock-Paper-Scissors", openSource: true },
+      { name: "Feedback Board", repo: "https://github.com/paritytech/feedback-board", openSource: true },
     ]
   },
 ];
@@ -323,9 +351,11 @@ LAYERS.forEach((layer, idx) => {
     ].filter(Boolean).join("");
     const tag = tags ? `<span class="tags">${tags}</span>` : "";
     const missingDoc = it.deployDoc ? "" : `<span class="doc-badge" title="Missing deploy doc">!</span>`;
+    const notOpenSource = it.openSource === false ? `<span class="opensource-badge" title="Not open source yet">!</span>` : "";
 
     el.innerHTML = `
       ${missingDoc}
+      ${notOpenSource}
       <div class="name"><span class="label">${it.name}</span> ${tag}${clickTarget ? '<span class="arrow">↗</span>' : ""}</div>
       ${hasRepo ? `<div class="repo">${repoShort}</div>` : ""}
     `;

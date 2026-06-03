@@ -15,7 +15,7 @@ const LAYERS = eval(m[1]);
 const C = {
   pink: "#e6007a", ink: "#0d0d12", paper: "#f5f5f7", card: "#ffffff",
   line: "#d9d9e0", muted: "#6b6b76", warn: "#b25b00", warnBg: "#fff4e3", gray: "#888888",
-  noDoc: "#c1262d",
+  noDoc: "#c1262d", notOpenSource: "#f4c430", notOpenSourceText: "#4a3000",
 };
 
 // ---- layout constants ----
@@ -78,6 +78,16 @@ const missingDocLegend = () => {
   lx += 26 + "Missing deploy doc".length * 6.4 + 26;
 };
 missingDocLegend();
+const notOpenSourceLegend = () => {
+  parts.push(`<circle cx="${lx + 8}" cy="${legendY - 4}" r="8" fill="${C.notOpenSource}"/>`);
+  parts.push(
+    `<text x="${lx + 8}" y="${legendY}" text-anchor="middle" font-size="11" ` +
+    `font-weight="800" fill="${C.notOpenSourceText}">!</text>`
+  );
+  parts.push(`<text x="${lx + 26}" y="${legendY}" font-size="12" fill="${C.muted}">Not open source yet</text>`);
+  lx += 26 + "Not open source yet".length * 6.4 + 26;
+};
+notOpenSourceLegend();
 legendItem(C.card, C.line, false, "Deployed internally", true);
 
 // ---- columns ----
@@ -137,6 +147,13 @@ LAYERS.forEach((layer, i) => {
       parts.push(
         `<text x="${cx + 1}" y="${y + 5}" text-anchor="middle" font-size="12" ` +
         `font-weight="800" fill="#fff">!</text>`
+      );
+    }
+    if (it.openSource === false) {
+      parts.push(`<circle cx="${cx + CARD_W - 1}" cy="${y + 1}" r="9" fill="${C.notOpenSource}" stroke="${C.paper}" stroke-width="2"/>`);
+      parts.push(
+        `<text x="${cx + CARD_W - 1}" y="${y + 5}" text-anchor="middle" font-size="12" ` +
+        `font-weight="800" fill="${C.notOpenSourceText}">!</text>`
       );
     }
 
