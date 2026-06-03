@@ -308,7 +308,8 @@ LAYERS.forEach((layer, idx) => {
 
   layer.items.forEach(it => {
     const hasRepo = !!it.repo;
-    const clickTarget = it.deployDoc || it.repo;
+    const deployDoc = it.deployDoc === "NA" ? "" : it.deployDoc;
+    const clickTarget = deployDoc || it.repo;
     const el = document.createElement(clickTarget ? "a" : "div");
     el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
     if (clickTarget) { el.href = clickTarget; el.target = "_blank"; el.rel = "noopener"; }

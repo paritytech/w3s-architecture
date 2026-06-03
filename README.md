@@ -28,9 +28,9 @@ Item fields:
 - `name`: display name on the board.
 - `repo`: GitHub URL, or `null` when there is no repo yet.
 - `w3f`: set to `true` for internally deployed items.
-- `deployDoc`: link to the deployment document when one exists.
+- `deployDoc`: link to the deployment document when one exists. Use `"NA"` when a deploy doc is intentionally not applicable.
 
-Items without `deployDoc` get the red `!` missing deploy doc badge. Items with `repo: null` get the `no repo` label.
+Items without `deployDoc` get the red `!` missing deploy doc badge. Items with `deployDoc: "NA"` do not get the badge, but still link to their repo. Items with `repo: null` get the `no repo` label.
 
 ## Repository List
 
