@@ -49,6 +49,31 @@
   .chip { width: 26px; height: 14px; border-radius: 4px; display: inline-block; }
   .chip.repo { background: var(--card); border: 1.5px solid var(--line); }
   .chip.norepo { background: var(--warn-bg); border: 1.5px dashed var(--warn); }
+  .doc-badge {
+    position: absolute;
+    top: -7px;
+    left: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #c1262d;
+    color: #fff;
+    border: 2px solid var(--paper);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    z-index: 2;
+  }
+  .legend .doc-badge {
+    position: static;
+    width: 16px;
+    height: 16px;
+    border-width: 0;
+    font-size: 11px;
+  }
   .chip.w3f { background: var(--card); border: 1.5px solid var(--line); box-shadow: inset 3px 0 0 #888; }
 
   .board {
@@ -81,7 +106,7 @@
   }
 
   .cards { display: flex; flex-direction: column; gap: 7px; }
-  a.card, div.card {
+  .card {
     text-decoration: none;
     color: inherit;
     background: var(--card);
@@ -90,9 +115,10 @@
     padding: 8px 11px;
     display: block;
     min-width: 0;
+    position: relative;
     transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
   }
-  a.card:hover {
+  .card.hasrepo:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 22px rgba(230,0,122,0.14);
     border-color: var(--pink);
@@ -100,10 +126,11 @@
   .card .name { font-size: 13px; font-weight: 650; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px; min-width: 0; }
   .card .name .label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card .tags { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; flex: 0 0 auto; flex-wrap: wrap; }
-  .card .repo { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: ui-monospace, "SF Mono", Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .repo { display: block; text-decoration: none; font-size: 11px; color: var(--muted); margin-top: 2px; font-family: ui-monospace, "SF Mono", Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .repo:hover { color: var(--pink); }
   .card .owner { font-size: 11px; color: #9a9aa4; margin-top: 5px; }
   .card .arrow { margin-left: auto; color: var(--pink); font-weight: 700; opacity: 0; transition: opacity .12s; }
-  a.card:hover .arrow { opacity: 1; }
+  .card.hasrepo:hover .arrow { opacity: 1; }
 
   .card.norepo {
     background: var(--warn-bg);
@@ -122,12 +149,15 @@
     white-space: normal;
     line-height: 1.25;
   }
-  .card.norepo .tags { align-self: center; max-width: 76px; }
+  .card.norepo .tags { align-self: center; max-width: 104px; }
   .tag {
+    display: inline-flex;
+    align-items: center;
     font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
     padding: 2px 6px; border-radius: 5px; background: var(--warn); color: #fff;
     line-height: 1;
     white-space: nowrap;
+    text-decoration: none;
   }
   .tag.w3f { background: #888; }
 
@@ -144,6 +174,7 @@
   <div class="legend">
     <span><i class="chip repo"></i> Repo + instructions available</span>
     <span><i class="chip norepo"></i> No repo yet — handoff gap</span>
+    <span><i class="doc-badge">!</i> Missing deploy doc</span>
     <span><i class="chip w3f"></i> Deployed internally</span>
   </div>
 </header>
@@ -197,7 +228,7 @@ const LAYERS = [
     sub: "Reusable deployment tools and workflows used by later repositories.",
     items: [
       { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy" },
-      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager" },
+      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager", deployDoc: "https://github.com/paritytech/contract-dependency-manager/blob/main/DEPLOY_DOC.md" },
       { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli" },
     ]
   },
@@ -278,7 +309,7 @@ LAYERS.forEach((layer, idx) => {
   layer.items.forEach(it => {
     const hasRepo = !!it.repo;
     const el = document.createElement(hasRepo ? "a" : "div");
-    el.className = "card" + (hasRepo ? "" : " norepo") + (it.w3f ? " w3f" : "");
+    el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
     if (hasRepo) { el.href = it.repo; el.target = "_blank"; el.rel = "noopener"; }
 
     const repoShort = it.repo ? it.repo.replace("https://github.com/", "") : "";
@@ -287,8 +318,10 @@ LAYERS.forEach((layer, idx) => {
       it.w3f ? `<span class="tag w3f">internal</span>` : "",
     ].filter(Boolean).join("");
     const tag = tags ? `<span class="tags">${tags}</span>` : "";
+    const missingDoc = it.deployDoc ? "" : `<span class="doc-badge" title="Missing deploy doc">!</span>`;
 
     el.innerHTML = `
+      ${missingDoc}
       <div class="name"><span class="label">${it.name}</span> ${tag}${hasRepo ? '<span class="arrow">↗</span>' : ""}</div>
       ${hasRepo ? `<div class="repo">${repoShort}</div>` : ""}
     `;

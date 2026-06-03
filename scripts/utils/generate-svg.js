@@ -15,6 +15,7 @@ const LAYERS = eval(m[1]);
 const C = {
   pink: "#e6007a", ink: "#0d0d12", paper: "#f5f5f7", card: "#ffffff",
   line: "#d9d9e0", muted: "#6b6b76", warn: "#b25b00", warnBg: "#fff4e3", gray: "#888888",
+  noDoc: "#c1262d",
 };
 
 // ---- layout constants ----
@@ -67,6 +68,16 @@ const legendItem = (fill, stroke, dash, text, bar) => {
 };
 legendItem(C.card, C.line, false, "Repo + instructions available", false);
 legendItem(C.warnBg, C.warn, true, "No repo yet — handoff gap", false);
+const missingDocLegend = () => {
+  parts.push(`<circle cx="${lx + 8}" cy="${legendY - 4}" r="8" fill="${C.noDoc}"/>`);
+  parts.push(
+    `<text x="${lx + 8}" y="${legendY}" text-anchor="middle" font-size="11" ` +
+    `font-weight="800" fill="#fff">!</text>`
+  );
+  parts.push(`<text x="${lx + 26}" y="${legendY}" font-size="12" fill="${C.muted}">Missing deploy doc</text>`);
+  lx += 26 + "Missing deploy doc".length * 6.4 + 26;
+};
+missingDocLegend();
 legendItem(C.card, C.line, false, "Deployed internally", true);
 
 // ---- columns ----
@@ -119,6 +130,20 @@ LAYERS.forEach((layer, i) => {
     );
     if (isInt) parts.push(`<rect x="${cx}" y="${y}" width="3" height="${CARD_H}" rx="1.5" fill="${C.gray}"/>`);
 
+    if (!it.deployDoc) {
+      parts.push(`<circle cx="${cx + 1}" cy="${y + 1}" r="9" fill="${C.noDoc}" stroke="${C.paper}" stroke-width="2"/>`);
+      parts.push(
+        `<text x="${cx + 1}" y="${y + 5}" text-anchor="middle" font-size="12" ` +
+        `font-weight="800" fill="#fff">!</text>`
+      );
+    }
+
+    // tags
+    const tags = [
+      !hasRepo ? { text: "no repo", color: C.warn } : null,
+      isInt ? { text: "internal", color: C.gray } : null,
+    ].filter(Boolean);
+
     // name
     const nameColor = hasRepo ? C.ink : C.warn;
     const nameMax = hasRepo ? 30 : 32;
@@ -135,11 +160,6 @@ LAYERS.forEach((layer, i) => {
       );
     }
 
-    // tags
-    const tags = [
-      !hasRepo ? { text: "no repo", color: C.warn } : null,
-      isInt ? { text: "internal", color: C.gray } : null,
-    ].filter(Boolean);
     tags.forEach((tag, k) => {
       const tagW = tag.text.length * 6.2 + 12;
       const tagY = hasRepo ? y + 9 + k * 18 : y + CARD_H - 23 - (tags.length - 1 - k) * 18;
