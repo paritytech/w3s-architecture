@@ -114,7 +114,7 @@ LAYERS.forEach((layer, i) => {
     const y = CARDS_TOP + j * (CARD_H + CARD_GAP);
     const hasRepo = !!it.repo;
     const isInt = !!it.w3f;
-    const repoShort = hasRepo ? it.repo.replace("https://github.com/", "") : "";
+    const repoShort = hasRepo ? (it.repoLabel || it.repo.replace("https://github.com/", "")) : "";
     const deployDoc = it.deployDoc === "NA" ? "" : it.deployDoc;
     const clickTarget = deployDoc || it.repo;
 
