@@ -1,0 +1,177 @@
+name: Deployment Map Preview
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Generate map diff
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install render tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends librsvg2-bin
+
+      - name: Checkout base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+
+      - name: Compare committed deployment map assets
+        id: asset-diff
+        run: |
+          set -euo pipefail
+
+          mkdir -p preview
+
+          if [[ ! -f base/assets/deployment-map.svg || ! -f head/assets/deployment-map.svg ]]; then
+            echo "assets/deployment-map.svg is missing from base or PR checkout" >&2
+            exit 1
+          fi
+
+          cp base/assets/deployment-map.svg preview/main.svg
+          cp head/assets/deployment-map.svg preview/pr.svg
+
+          if cmp -s base/assets/deployment-map.svg head/assets/deployment-map.svg; then
+            echo "asset_diff=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "asset_diff=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check generated deployment map assets
+        id: generated-assets
+        run: |
+          set -euo pipefail
+
+          if [[ ! -x head/scripts/generate.sh ]]; then
+            echo "scripts/generate.sh is missing or not executable in the PR checkout" >&2
+            exit 1
+          fi
+
+          cp head/assets/deployment-map.svg preview/committed-pr.svg
+          cp head/assets/deployment-map.png preview/committed-pr.png
+
+          head/scripts/generate.sh "$PWD/head"
+
+          cp head/assets/deployment-map.svg preview/generated-pr.svg
+          cp head/assets/deployment-map.png preview/generated-pr.png
+
+          if git -C head diff --quiet -- assets/deployment-map.svg; then
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          else
+            git -C head diff --name-only -- assets/deployment-map.svg > preview/stale-export-assets.txt
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload generated assets
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-map-preview-pr-${{ github.event.pull_request.number }}
+          path: preview/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
+          EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
+        with:
+          script: |
+            const marker = "<!-- deployment-map-preview -->";
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const baseSha = pr.base.sha;
+            const headSha = pr.head.sha;
+            const headRepo = pr.head.repo.full_name;
+
+            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/assets/deployment-map.svg?raw=1`;
+            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/assets/deployment-map.svg?raw=1`;
+            const artifactUrl = process.env.ARTIFACT_URL;
+            const assetDiff = process.env.ASSET_DIFF === "true";
+            const exportStale = process.env.EXPORT_STALE === "true";
+
+            const body = [
+              marker,
+              "### Deployment Map Preview",
+              "",
+              ...(assetDiff
+                ? [
+                    "Deployment Map Asset diff detected.",
+                    "",
+                    "**Before (main)**",
+                    "",
+                    `<img src="${beforeUrl}" width="900" alt="Deployment map before" />`,
+                    "",
+                    "**After (PR)**",
+                    "",
+                    `<img src="${afterUrl}" width="900" alt="Deployment map after" />`,
+                    "",
+                    `[Download generated assets](${artifactUrl})`,
+                  ]
+                : [
+                    "no Deployment Map Asset diff detected",
+                    "",
+                    `[Download generated assets](${artifactUrl})`,
+                  ]),
+              ...(exportStale
+                ? [
+                    "",
+                    "❌ Please run `bash scripts/generate.sh` to sync Deployment Map export assets!",
+                  ]
+                : []),
+            ].join("\n");
+
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: pr.number,
+              per_page: 100,
+            });
+
+            const existing = comments.data.find((comment) =>
+              comment.user.type === "Bot" && comment.body && comment.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body,
+              });
+            }
+
+      - name: Fail if generated SVG is stale
+        if: steps.generated-assets.outputs.stale == 'true'
+        run: |
+          echo "assets/deployment-map.svg is out of sync. Run bash scripts/generate.sh and commit the result." >&2
+          exit 1

@@ -98,7 +98,8 @@
     border-color: var(--pink);
   }
   .card .name { font-size: 13px; font-weight: 650; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .card .name .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .name .label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .tags { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; flex: 0 0 auto; flex-wrap: wrap; }
   .card .repo { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: ui-monospace, "SF Mono", Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card .owner { font-size: 11px; color: #9a9aa4; margin-top: 5px; }
   .card .arrow { margin-left: auto; color: var(--pink); font-weight: 700; opacity: 0; transition: opacity .12s; }
@@ -109,10 +110,24 @@
     border: 1.5px dashed var(--warn);
     cursor: default;
   }
-  .card.norepo .name { color: var(--warn); }
+  .card.norepo .name {
+    color: var(--warn);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .card.norepo .name .label {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.25;
+  }
+  .card.norepo .tags { align-self: center; max-width: 76px; }
   .tag {
     font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
     padding: 2px 6px; border-radius: 5px; background: var(--warn); color: #fff;
+    line-height: 1;
+    white-space: nowrap;
   }
   .tag.w3f { background: #888; }
 
@@ -136,81 +151,110 @@
 <div class="board" id="board"></div>
 
 <script>
-// Layers ordered 1..5. Layer 1 = foundation (leftmost), apps rightmost.
+// Layers ordered left-to-right. Layer 1 = foundation, apps/reference deployments later.
 const LAYERS = [
   {
     num: 1,
-    title: "Test Environment (Chains)",
-    sub: "The test network everything else connects to. Must exist before anything.",
+    title: "Test Environment + Meta Setup",
+    sub: "The chains and deployment prerequisites everything else depends on.",
     items: [
-      { name: "Relay Chain + Asset Hub", repo: "https://github.com/paritytech/polkadot-sdk" },
-      { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain" },
-      { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality" },
+      { name: "Relay Chain + Asset Hub", repo: "https://github.com/paritytech/polkadot-sdk", w3f: true },
+      { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain", w3f: true },
+      { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality", w3f: true },
+      { name: "RevX", repo: "https://github.com/paritytech/revx", w3f: true },
     ]
   },
   {
     num: 2,
-    title: "Infrastructure",
-    sub: "Backend services and on-chain plumbing the platform & apps call into.",
+    title: "Deployer Funding",
+    sub: "Funding and account setup needed before first contract deployments.",
     items: [
-      { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend" },
-      { name: "dotNS", repo: "https://github.com/paritytech/dotns" },
-      { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy" },
+      { name: "Deployer Funding Instructions", repo: null },
     ]
   },
   {
     num: 3,
-    title: "Platform — Polkadot Triangle",
-    sub: "The clients users run to discover & launch dApps.",
+    title: "Core Infrastructure",
+    sub: "Backend services and on-chain plumbing the platform and apps call into.",
     items: [
-      { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli" },
-      { name: "Polkadot Mobile — iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2" },
-      { name: "Polkadot Mobile — Android", repo: "https://github.com/paritytech/polkadot-app-android-v2" },
-      { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop" },
+      { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend" },
+      { name: "dotNS", repo: "https://github.com/paritytech/dotns" },
+      { name: "dotNS-CLI", repo: "https://github.com/paritytech/dotns-sdk/tree/main#" },
     ]
   },
   {
     num: 4,
-    title: "Triangle-js SDK",
-    sub: "Foundation of the SDK chain.",
+    title: "SDKs / Developer Packages",
+    sub: "Packages that downstream deploy tooling, clients, and apps consume.",
     items: [
       { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks" },
-    ]
-  },
-  {
-    num: 5,
-    title: "Product SDK",
-    sub: "Built on the Triangle-js SDK.",
-    items: [
       { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk" },
     ]
   },
   {
-    num: 6,
-    title: "Contract Dependency Manager",
-    sub: "Built on the Product SDK; consumed by the products.",
+    num: 5,
+    title: "Deploy Tooling / Shared Services",
+    sub: "Reusable deployment tools and workflows used by later repositories.",
     items: [
+      { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy" },
       { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager" },
+      { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli" },
+    ]
+  },
+  {
+    num: 6,
+    title: "Platform Web / Desktop",
+    sub: "Triangle clients that can be deployed before mobile app-store review.",
+    items: [
+      { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli" },
+      { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop" },
     ]
   },
   {
     num: 7,
-    title: "Apps & Proof-of-Concepts",
-    sub: "End-user products, deployed last — they assume the full stack to the right is live.",
+    title: "Mobile Review Prerequisites",
+    sub: "Products/config values mobile apps need available for app-store review.",
+    items: [
+      { name: "Browse.dot", repo: "https://github.com/paritytech/browse" },
+      { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app" },
+      { name: "W3S Coin", repo: null, w3f: true },
+    ]
+  },
+  {
+    num: 8,
+    title: "Mobile Apps",
+    sub: "Mobile clients after review prerequisites and platform building blocks exist.",
+    items: [
+      { name: "Polkadot Mobile - iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2" },
+      { name: "Polkadot Mobile - Android", repo: "https://github.com/paritytech/polkadot-app-android-v2" },
+    ]
+  },
+  {
+    num: 9,
+    title: "Reference Implementations / Prototypes",
+    sub: "End-user products and prototypes that consume the platform/tooling stack.",
     items: [
       { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter" },
-      { name: "W3S Conference App", repo: "https://github.com/paritytech/w3s-conference-app" },
       { name: "Playground App", repo: "https://github.com/paritytech/playground-app" },
-      { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli" },
       { name: "Playground Constellation", repo: "https://github.com/paritytech/playground-constellation" },
       { name: "T3rminal", repo: "https://github.com/paritytech/t3rminal" },
-      { name: "Browse.dot", repo: "https://github.com/paritytech/browse" },
       { name: "LocalDot", repo: "https://github.com/paritytech/p2p-market" },
       { name: "LinkTr33", repo: "https://github.com/paritytech/linktr33" },
       { name: "Sit3Drop", repo: "https://github.com/paritytech/dotdot-deployer" },
       { name: "Mercado", repo: "https://github.com/paritytech/mercado" },
       { name: "W3S Ticketing", repo: "https://github.com/paritytech/tick3t", w3f: true },
-      { name: "W3S Coin", repo: null, w3f: true },
+    ]
+  },
+  {
+    num: 10,
+    title: "Playground Sample Apps",
+    sub: "Sample/template deployments that come after the Playground App.",
+    items: [
+      { name: "Simple Survey", repo: "https://github.com/paritytech/simple-survey" },
+      { name: "Playground App Template", repo: "https://github.com/paritytech/playground-app-template" },
+      { name: "Playground Tutorial", repo: "https://github.com/paritytech/playground-tutorial" },
+      { name: "Rock Paper Scissors", repo: "https://github.com/paritytech/Rock-Paper-Scissors" },
+      { name: "Feedback Board", repo: "https://github.com/paritytech/feedback-board" },
     ]
   },
 ];
@@ -224,6 +268,8 @@ LAYERS.forEach((layer, idx) => {
   col.innerHTML = `
     <div class="layer-head">
       <span class="layer-num">${layer.num}</span>
+      <div class="layer-title">${layer.title}</div>
+      <div class="layer-sub">${layer.sub}</div>
     </div>
     <div class="cards"></div>
   `;
@@ -236,8 +282,11 @@ LAYERS.forEach((layer, idx) => {
     if (hasRepo) { el.href = it.repo; el.target = "_blank"; el.rel = "noopener"; }
 
     const repoShort = it.repo ? it.repo.replace("https://github.com/", "") : "";
-    const tag = !hasRepo ? `<span class="tag${it.w3f ? " w3f" : ""}">${it.w3f ? "internal" : "no repo"}</span>`
-              : (it.w3f ? `<span class="tag w3f">internal</span>` : "");
+    const tags = [
+      !hasRepo ? `<span class="tag">no repo</span>` : "",
+      it.w3f ? `<span class="tag w3f">internal</span>` : "",
+    ].filter(Boolean).join("");
+    const tag = tags ? `<span class="tags">${tags}</span>` : "";
 
     el.innerHTML = `
       <div class="name"><span class="label">${it.name}</span> ${tag}${hasRepo ? '<span class="arrow">↗</span>' : ""}</div>
