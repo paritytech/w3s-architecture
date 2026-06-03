@@ -308,9 +308,10 @@ LAYERS.forEach((layer, idx) => {
 
   layer.items.forEach(it => {
     const hasRepo = !!it.repo;
-    const el = document.createElement(hasRepo ? "a" : "div");
+    const clickTarget = it.deployDoc || it.repo;
+    const el = document.createElement(clickTarget ? "a" : "div");
     el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
-    if (hasRepo) { el.href = it.repo; el.target = "_blank"; el.rel = "noopener"; }
+    if (clickTarget) { el.href = clickTarget; el.target = "_blank"; el.rel = "noopener"; }
 
     const repoShort = it.repo ? it.repo.replace("https://github.com/", "") : "";
     const tags = [
@@ -322,7 +323,7 @@ LAYERS.forEach((layer, idx) => {
 
     el.innerHTML = `
       ${missingDoc}
-      <div class="name"><span class="label">${it.name}</span> ${tag}${hasRepo ? '<span class="arrow">↗</span>' : ""}</div>
+      <div class="name"><span class="label">${it.name}</span> ${tag}${clickTarget ? '<span class="arrow">↗</span>' : ""}</div>
       ${hasRepo ? `<div class="repo">${repoShort}</div>` : ""}
     `;
     cards.appendChild(el);

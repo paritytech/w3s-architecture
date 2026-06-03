@@ -115,9 +115,10 @@ LAYERS.forEach((layer, i) => {
     const hasRepo = !!it.repo;
     const isInt = !!it.w3f;
     const repoShort = hasRepo ? it.repo.replace("https://github.com/", "") : "";
+    const clickTarget = it.deployDoc || it.repo;
 
-    const open = hasRepo ? `<a xlink:href="${esc(it.repo)}" href="${esc(it.repo)}" target="_blank">` : "";
-    const close = hasRepo ? `</a>` : "";
+    const open = clickTarget ? `<a xlink:href="${esc(clickTarget)}" href="${esc(clickTarget)}" target="_blank">` : "";
+    const close = clickTarget ? `</a>` : "";
 
     const fill = hasRepo ? C.card : C.warnBg;
     const stroke = hasRepo ? C.line : C.warn;
