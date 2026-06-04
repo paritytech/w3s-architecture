@@ -1,14 +1,14 @@
-// Generates assets/deployment-map.svg from the LAYERS data embedded in deployment-map.html.
+// Generates assets/open-source-map.svg from the LAYERS data embedded in open-source-map.html.
 // Run: node scripts/utils/generate-svg.js
-// To refresh both assets/deployment-map.svg and assets/deployment-map.png, run: scripts/generate.sh
+// To refresh both assets/open-source-map.svg and assets/open-source-map.png, run: scripts/generate.sh
 const fs = require("fs");
 const path = require("path");
 
 const rootDir = path.resolve(__dirname, "../..");
 const assetDir = path.join(rootDir, "assets");
-const html = fs.readFileSync(path.join(rootDir, "deployment-map.html"), "utf8");
+const html = fs.readFileSync(path.join(rootDir, "open-source-map.html"), "utf8");
 const m = html.match(/const LAYERS = ([\s\S]*?\];)/);
-if (!m) throw new Error("Could not find LAYERS array in deployment-map.html");
+if (!m) throw new Error("Could not find LAYERS array in open-source-map.html");
 const LAYERS = eval(m[1]);
 
 // ---- palette ----
@@ -16,6 +16,7 @@ const C = {
   pink: "#e6007a", ink: "#0d0d12", paper: "#f5f5f7", card: "#ffffff",
   line: "#d9d9e0", muted: "#6b6b76", warn: "#b25b00", warnBg: "#fff4e3", gray: "#888888",
   noDoc: "#c1262d", notOpenSource: "#f4c430", notOpenSourceText: "#4a3000",
+  ready: "#238636", readyText: "#ffffff",
 };
 
 // ---- layout constants ----
@@ -88,6 +89,16 @@ const notOpenSourceLegend = () => {
   lx += 26 + "Not open source yet".length * 6.4 + 26;
 };
 notOpenSourceLegend();
+const readyLegend = () => {
+  parts.push(`<circle cx="${lx + 8}" cy="${legendY - 4}" r="8" fill="${C.ready}"/>`);
+  parts.push(
+    `<text x="${lx + 8}" y="${legendY}" text-anchor="middle" font-size="11" ` +
+    `font-weight="800" fill="${C.readyText}">✓</text>`
+  );
+  parts.push(`<text x="${lx + 26}" y="${legendY}" font-size="12" fill="${C.muted}">Checks met</text>`);
+  lx += 26 + "Checks met".length * 6.4 + 26;
+};
+readyLegend();
 legendItem(C.card, C.line, false, "Deployed internally", true);
 
 // ---- columns ----
@@ -156,6 +167,13 @@ LAYERS.forEach((layer, i) => {
         `font-weight="800" fill="${C.notOpenSourceText}">!</text>`
       );
     }
+    if (it.openSource === true && it.deployDoc) {
+      parts.push(`<circle cx="${cx + CARD_W - 1}" cy="${y + 1}" r="9" fill="${C.ready}" stroke="${C.paper}" stroke-width="2"/>`);
+      parts.push(
+        `<text x="${cx + CARD_W - 1}" y="${y + 5}" text-anchor="middle" font-size="12" ` +
+        `font-weight="800" fill="${C.readyText}">✓</text>`
+      );
+    }
 
     // tags
     const tags = [
@@ -197,5 +215,5 @@ LAYERS.forEach((layer, i) => {
 parts.push(`</svg>`);
 
 fs.mkdirSync(assetDir, { recursive: true });
-fs.writeFileSync(path.join(assetDir, "deployment-map.svg"), parts.join("\n"));
-console.log(`Wrote assets/deployment-map.svg (${boardW}×${boardH})`);
+fs.writeFileSync(path.join(assetDir, "open-source-map.svg"), parts.join("\n"));
+console.log(`Wrote assets/open-source-map.svg (${boardW}×${boardH})`);

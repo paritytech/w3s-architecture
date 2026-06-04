@@ -13,8 +13,8 @@ else
 fi
 
 ASSET_DIR="$ROOT_DIR/assets"
-SVG_PATH="$ASSET_DIR/deployment-map.svg"
-PNG_PATH="$ASSET_DIR/deployment-map.png"
+SVG_PATH="$ASSET_DIR/open-source-map.svg"
+PNG_PATH="$ASSET_DIR/open-source-map.png"
 GENERATOR="$ROOT_DIR/scripts/utils/generate-svg.js"
 LEGACY_GENERATOR="$ROOT_DIR/generate-svg.js"
 
@@ -24,11 +24,11 @@ fi
 
 if [[ ! -f "$GENERATOR" ]]; then
   if [[ -f "$PNG_PATH" ]]; then
-    echo "No SVG generator found in $ROOT_DIR; using existing assets/deployment-map.png"
+    echo "No SVG generator found in $ROOT_DIR; using existing assets/open-source-map.png"
     exit 0
   fi
 
-  echo "No SVG generator or assets/deployment-map.png found in $ROOT_DIR" >&2
+  echo "No SVG generator or assets/open-source-map.png found in $ROOT_DIR" >&2
   exit 1
 fi
 
@@ -36,7 +36,7 @@ mkdir -p "$ASSET_DIR"
 
 (cd "$ROOT_DIR" && node "$GENERATOR")
 
-TMP_SVG="$(mktemp "${TMPDIR:-/tmp}/deployment-map-no-links.XXXXXX.svg")"
+TMP_SVG="$(mktemp "${TMPDIR:-/tmp}/open-source-map-no-links.XXXXXX.svg")"
 trap 'rm -f "$TMP_SVG"' EXIT
 
 node - "$SVG_PATH" "$TMP_SVG" <<'JS'
