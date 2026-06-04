@@ -1,29 +1,29 @@
 # W3S Architecture
 
-![Polkadot Product Ecosystem Open Sourcing Map](assets/deployment-map.svg)
+![Polkadot Product Ecosystem Open Sourcing Map](assets/open-source-map.svg)
 
-🔗 **Live page:** https://paritytech.github.io/w3s-architecture/ · **Full-size image:** [SVG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/deployment-map.svg) · [PNG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/deployment-map.png)
+🔗 **Live page:** https://paritytech.github.io/w3s-architecture/ · **Full-size image:** [SVG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/open-source-map.svg) · [PNG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/open-source-map.png)
 
 This repo tracks the W3S open sourcing map and the related repository list used to inspect/reference project sources.
 
 ## Map Workflow
 
-The map source of truth is `deployment-map.html`. The generated exports live in `assets/`:
+The map source of truth is `open-source-map.html`. The generated exports live in `assets/`:
 
-- `assets/deployment-map.svg`
-- `assets/deployment-map.png`
+- `assets/open-source-map.svg`
+- `assets/open-source-map.png`
 
-When you edit the map, update the `LAYERS` array in `deployment-map.html`, then regenerate the exports:
+When you edit the map, update the `LAYERS` array in `open-source-map.html`, then regenerate the exports:
 
 ```sh
 bash scripts/generate.sh
 ```
 
-The PR workflow compares the committed SVG export against `main`, comments a before/after preview, and fails if `assets/deployment-map.svg` is out of sync with `deployment-map.html`.
+The PR workflow compares the committed SVG export against `main`, comments a before/after preview, and fails if `assets/open-source-map.svg` is out of sync with `open-source-map.html`.
 
 ## Adding Map Items
 
-Add lanes or items in the `LAYERS` array in `deployment-map.html`.
+Add lanes or items in the `LAYERS` array in `open-source-map.html`.
 
 Item fields:
 
@@ -47,7 +47,7 @@ When adding a new repo-backed map item, also add it to `repos.csv`.
 
 ## Scripts
 
-`scripts/generate.sh` regenerates both open sourcing map exports from `deployment-map.html`.
+`scripts/generate.sh` regenerates both open sourcing map exports from `open-source-map.html`.
 
 `scripts/clone_all.sh` clones the unique repositories from `repos.csv` into `./reference-repos` over HTTPS, in parallel. `reference-repos/` is ignored by git.
 

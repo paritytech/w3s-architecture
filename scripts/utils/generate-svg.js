@@ -1,14 +1,14 @@
-// Generates assets/deployment-map.svg from the LAYERS data embedded in deployment-map.html.
+// Generates assets/open-source-map.svg from the LAYERS data embedded in open-source-map.html.
 // Run: node scripts/utils/generate-svg.js
-// To refresh both assets/deployment-map.svg and assets/deployment-map.png, run: scripts/generate.sh
+// To refresh both assets/open-source-map.svg and assets/open-source-map.png, run: scripts/generate.sh
 const fs = require("fs");
 const path = require("path");
 
 const rootDir = path.resolve(__dirname, "../..");
 const assetDir = path.join(rootDir, "assets");
-const html = fs.readFileSync(path.join(rootDir, "deployment-map.html"), "utf8");
+const html = fs.readFileSync(path.join(rootDir, "open-source-map.html"), "utf8");
 const m = html.match(/const LAYERS = ([\s\S]*?\];)/);
-if (!m) throw new Error("Could not find LAYERS array in deployment-map.html");
+if (!m) throw new Error("Could not find LAYERS array in open-source-map.html");
 const LAYERS = eval(m[1]);
 
 // ---- palette ----
@@ -215,5 +215,5 @@ LAYERS.forEach((layer, i) => {
 parts.push(`</svg>`);
 
 fs.mkdirSync(assetDir, { recursive: true });
-fs.writeFileSync(path.join(assetDir, "deployment-map.svg"), parts.join("\n"));
-console.log(`Wrote assets/deployment-map.svg (${boardW}×${boardH})`);
+fs.writeFileSync(path.join(assetDir, "open-source-map.svg"), parts.join("\n"));
+console.log(`Wrote assets/open-source-map.svg (${boardW}×${boardH})`);
