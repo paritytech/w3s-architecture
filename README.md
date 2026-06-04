@@ -1,6 +1,6 @@
 # W3S Architecture
 
-![Polkadot Product Ecosystem Open Sourcing Map](assets/open-source-map.svg)
+![Polkadot Prototype Ecosystem Open Sourcing Map](assets/open-source-map.svg)
 
 🔗 **Live page:** https://paritytech.github.io/w3s-architecture/open-source-map.html · **Full-size image:** [SVG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/open-source-map.svg) · [PNG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/open-source-map.png)
 
