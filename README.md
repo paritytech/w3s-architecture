@@ -2,7 +2,7 @@
 
 ![Polkadot Product Ecosystem Open Sourcing Map](assets/deployment-map.svg)
 
-🔗 **Live site:** https://paritytech.github.io/w3s-architecture/ · **Full-size image:** [SVG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/deployment-map.svg) · [PNG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/deployment-map.png)
+🔗 **Live page:** https://paritytech.github.io/w3s-architecture/ · **Full-size image:** [SVG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/deployment-map.svg) · [PNG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/deployment-map.png)
 
 This repo tracks the W3S open sourcing map and the related repository list used to inspect/reference project sources.
 
