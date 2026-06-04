@@ -33,7 +33,7 @@ Item fields:
 - `deployDoc`: link to the deployment document when one exists. Use `"NA"` when a deploy doc is intentionally not applicable.
 - `openSource`: set to `true` when the repo is public/open source, or `false` when it is private or there is no repo yet.
 
-Items without `deployDoc` get the red `!` missing deploy doc badge. Items with `deployDoc: "NA"` do not get the badge, but still link to their repo. Items with `openSource: false` get the yellow `!` not-open-source badge. Items with `repo: null` get the `no repo` label.
+Items without `deployDoc` get the red `!` missing deploy doc badge. Items with `deployDoc: "NA"` do not get the badge, but still link to their repo. Items with `openSource: false` get the yellow `!` not-open-source badge. Items with `openSource: true` and any `deployDoc` value, including `"NA"`, get the green check badge. Items with `repo: null` get the `no repo` label.
 
 ## Repository List
 

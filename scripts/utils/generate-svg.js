@@ -16,6 +16,7 @@ const C = {
   pink: "#e6007a", ink: "#0d0d12", paper: "#f5f5f7", card: "#ffffff",
   line: "#d9d9e0", muted: "#6b6b76", warn: "#b25b00", warnBg: "#fff4e3", gray: "#888888",
   noDoc: "#c1262d", notOpenSource: "#f4c430", notOpenSourceText: "#4a3000",
+  ready: "#238636", readyText: "#ffffff",
 };
 
 // ---- layout constants ----
@@ -88,6 +89,16 @@ const notOpenSourceLegend = () => {
   lx += 26 + "Not open source yet".length * 6.4 + 26;
 };
 notOpenSourceLegend();
+const readyLegend = () => {
+  parts.push(`<circle cx="${lx + 8}" cy="${legendY - 4}" r="8" fill="${C.ready}"/>`);
+  parts.push(
+    `<text x="${lx + 8}" y="${legendY}" text-anchor="middle" font-size="11" ` +
+    `font-weight="800" fill="${C.readyText}">✓</text>`
+  );
+  parts.push(`<text x="${lx + 26}" y="${legendY}" font-size="12" fill="${C.muted}">Checks met</text>`);
+  lx += 26 + "Checks met".length * 6.4 + 26;
+};
+readyLegend();
 legendItem(C.card, C.line, false, "Deployed internally", true);
 
 // ---- columns ----
@@ -154,6 +165,13 @@ LAYERS.forEach((layer, i) => {
       parts.push(
         `<text x="${cx + CARD_W - 1}" y="${y + 5}" text-anchor="middle" font-size="12" ` +
         `font-weight="800" fill="${C.notOpenSourceText}">!</text>`
+      );
+    }
+    if (it.openSource === true && it.deployDoc) {
+      parts.push(`<circle cx="${cx + CARD_W - 1}" cy="${y + 1}" r="9" fill="${C.ready}" stroke="${C.paper}" stroke-width="2"/>`);
+      parts.push(
+        `<text x="${cx + CARD_W - 1}" y="${y + 5}" text-anchor="middle" font-size="12" ` +
+        `font-weight="800" fill="${C.readyText}">✓</text>`
       );
     }
 

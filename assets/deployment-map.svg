@@ -12,9 +12,12 @@
 <circle cx="724.8" cy="76" r="8" fill="#f4c430"/>
 <text x="724.8" y="80" text-anchor="middle" font-size="11" font-weight="800" fill="#4a3000">!</text>
 <text x="742.8" y="80" font-size="12" fill="#6b6b76">Not open source yet</text>
-<rect x="890.4" y="69" width="26" height="14" rx="4" fill="#ffffff" stroke="#d9d9e0" stroke-width="1.5"/>
-<rect x="890.4" y="69" width="3" height="14" fill="#888888"/>
-<text x="924.4" y="80" font-size="12" fill="#6b6b76">Deployed internally</text>
+<circle cx="898.4" cy="76" r="8" fill="#238636"/>
+<text x="898.4" y="80" text-anchor="middle" font-size="11" font-weight="800" fill="#ffffff">✓</text>
+<text x="916.4" y="80" font-size="12" fill="#6b6b76">Checks met</text>
+<rect x="1006.4" y="69" width="26" height="14" rx="4" fill="#ffffff" stroke="#d9d9e0" stroke-width="1.5"/>
+<rect x="1006.4" y="69" width="3" height="14" fill="#888888"/>
+<text x="1040.4" y="80" font-size="12" fill="#6b6b76">Deployed internally</text>
 <line x1="310" y1="104" x2="310" y2="872" stroke="#d9d9e0" stroke-width="1" stroke-dasharray="4 4"/>
 <rect x="53" y="106" width="30" height="30" rx="8" fill="#0d0d12"/>
 <text x="68" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1</text>
@@ -23,6 +26,8 @@
 <a xlink:href="https://github.com/paritytech/polkadot-sdk" href="https://github.com/paritytech/polkadot-sdk" target="_blank">
 <rect x="53" y="202" width="244" height="56" rx="9" fill="#ffffff" stroke="#d9d9e0" stroke-width="1.5"/>
 <rect x="53" y="202" width="3" height="56" rx="1.5" fill="#888888"/>
+<circle cx="296" cy="203" r="9" fill="#238636" stroke="#f5f5f7" stroke-width="2"/>
+<text x="296" y="207" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff">✓</text>
 <text x="66" y="224" font-size="13" font-weight="600" fill="#0d0d12" letter-spacing="-0.2">Relay Chain + Asset Hub</text>
 <text x="66" y="242" font-size="10.5" font-family="ui-monospace, 'SF Mono', Menlo, monospace" fill="#6b6b76">paritytech/polkadot-sdk</text>
 <rect x="224.4" y="211" width="61.6" height="16" rx="5" fill="#888888"/>
@@ -31,6 +36,8 @@
 <a xlink:href="https://github.com/paritytech/polkadot-bulletin-chain" href="https://github.com/paritytech/polkadot-bulletin-chain" target="_blank">
 <rect x="53" y="267" width="244" height="56" rx="9" fill="#ffffff" stroke="#d9d9e0" stroke-width="1.5"/>
 <rect x="53" y="267" width="3" height="56" rx="1.5" fill="#888888"/>
+<circle cx="296" cy="268" r="9" fill="#238636" stroke="#f5f5f7" stroke-width="2"/>
+<text x="296" y="272" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff">✓</text>
 <text x="66" y="289" font-size="13" font-weight="600" fill="#0d0d12" letter-spacing="-0.2">Polkadot Bulletin Chain</text>
 <text x="66" y="307" font-size="10.5" font-family="ui-monospace, 'SF Mono', Menlo, monospace" fill="#6b6b76">paritytech/polkadot-bulletin-chain</text>
 <rect x="224.4" y="276" width="61.6" height="16" rx="5" fill="#888888"/>
@@ -139,6 +146,8 @@
 </a>
 <a xlink:href="https://github.com/paritytech/contract-dependency-manager/blob/main/DEPLOY_DOC.md" href="https://github.com/paritytech/contract-dependency-manager/blob/main/DEPLOY_DOC.md" target="_blank">
 <rect x="1133" y="267" width="244" height="56" rx="9" fill="#ffffff" stroke="#d9d9e0" stroke-width="1.5"/>
+<circle cx="1376" cy="268" r="9" fill="#238636" stroke="#f5f5f7" stroke-width="2"/>
+<text x="1376" y="272" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff">✓</text>
 <text x="1146" y="289" font-size="13" font-weight="600" fill="#0d0d12" letter-spacing="-0.2">Contract Dependency Manager</text>
 <text x="1146" y="307" font-size="10.5" font-family="ui-monospace, 'SF Mono', Menlo, monospace" fill="#6b6b76">paritytech/contract-dependency-mana…</text>
 </a>
