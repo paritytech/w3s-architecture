@@ -36,50 +36,30 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           path: head
 
-      - name: Compare committed open sourcing map assets
+      - name: Generate and compare open sourcing map assets
         id: asset-diff
         run: |
           set -euo pipefail
 
           mkdir -p preview
 
-          if [[ ! -f base/assets/open-source-map.svg || ! -f head/assets/open-source-map.svg ]]; then
-            echo "assets/open-source-map.svg is missing from base or PR checkout" >&2
+          if [[ ! -x base/scripts/generate.sh || ! -x head/scripts/generate.sh ]]; then
+            echo "scripts/generate.sh is missing or not executable in base or PR checkout" >&2
             exit 1
           fi
 
-          cp base/assets/open-source-map.svg preview/main.svg
-          cp head/assets/open-source-map.svg preview/pr.svg
+          base/scripts/generate.sh "$PWD/base"
+          head/scripts/generate.sh "$PWD/head"
 
-          if cmp -s base/assets/open-source-map.svg head/assets/open-source-map.svg; then
+          cp base/assets/open-source-map.svg preview/main.svg
+          cp base/assets/open-source-map.png preview/main.png
+          cp head/assets/open-source-map.svg preview/pr.svg
+          cp head/assets/open-source-map.png preview/pr.png
+
+          if cmp -s preview/main.svg preview/pr.svg; then
             echo "asset_diff=false" >> "$GITHUB_OUTPUT"
           else
             echo "asset_diff=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Check generated open sourcing map assets
-        id: generated-assets
-        run: |
-          set -euo pipefail
-
-          if [[ ! -x head/scripts/generate.sh ]]; then
-            echo "scripts/generate.sh is missing or not executable in the PR checkout" >&2
-            exit 1
-          fi
-
-          cp head/assets/open-source-map.svg preview/committed-pr.svg
-          cp head/assets/open-source-map.png preview/committed-pr.png
-
-          head/scripts/generate.sh "$PWD/head"
-
-          cp head/assets/open-source-map.svg preview/generated-pr.svg
-          cp head/assets/open-source-map.png preview/generated-pr.png
-
-          if git -C head diff --quiet -- assets/open-source-map.svg; then
-            echo "stale=false" >> "$GITHUB_OUTPUT"
-          else
-            git -C head diff --name-only -- assets/open-source-map.svg > preview/stale-export-assets.txt
-            echo "stale=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload generated assets
@@ -96,51 +76,23 @@ jobs:
         env:
           ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
           ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
-          EXPORT_STALE: ${{ steps.generated-assets.outputs.stale }}
         with:
           script: |
             const marker = "<!-- open-sourcing-map-preview -->";
             const { owner, repo } = context.repo;
             const pr = context.payload.pull_request;
-            const baseSha = pr.base.sha;
-            const headSha = pr.head.sha;
-            const headRepo = pr.head.repo.full_name;
-
-            const beforeUrl = `https://github.com/${owner}/${repo}/blob/${baseSha}/assets/open-source-map.svg?raw=1`;
-            const afterUrl = `https://github.com/${headRepo}/blob/${headSha}/assets/open-source-map.svg?raw=1`;
             const artifactUrl = process.env.ARTIFACT_URL;
             const assetDiff = process.env.ASSET_DIFF === "true";
-            const exportStale = process.env.EXPORT_STALE === "true";
 
             const body = [
               marker,
               "### Open Sourcing Map Preview",
               "",
-              ...(assetDiff
-                ? [
-                    "Open Sourcing Map Asset diff detected.",
-                    "",
-                    "**Before (main)**",
-                    "",
-                    `<img src="${beforeUrl}" width="900" alt="Open sourcing map before" />`,
-                    "",
-                    "**After (PR)**",
-                    "",
-                    `<img src="${afterUrl}" width="900" alt="Open sourcing map after" />`,
-                    "",
-                    `[Download generated assets](${artifactUrl})`,
-                  ]
-                : [
-                    "no Open Sourcing Map Asset diff detected",
-                    "",
-                    `[Download generated assets](${artifactUrl})`,
-                  ]),
-              ...(exportStale
-                ? [
-                    "",
-                    "❌ Please run `bash scripts/generate.sh` to sync Open Sourcing Map export assets!",
-                  ]
-                : []),
+              assetDiff
+                ? "Open Sourcing Map asset diff detected. The map exports are generated in CI (not committed) and published to GitHub Pages after merge."
+                : "No Open Sourcing Map asset diff detected.",
+              "",
+              `[Download generated assets (before/after)](${artifactUrl})`,
             ].join("\n");
 
             const comments = await github.rest.issues.listComments({
@@ -169,9 +121,3 @@ jobs:
                 body,
               });
             }
-
-      - name: Fail if generated SVG is stale
-        if: steps.generated-assets.outputs.stale == 'true'
-        run: |
-          echo "assets/open-source-map.svg is out of sync. Run bash scripts/generate.sh and commit the result." >&2
-          exit 1
