@@ -1,25 +1,25 @@
 # W3S Architecture
 
-![Polkadot Prototype Ecosystem Open Sourcing Map](assets/open-source-map.svg)
+![Polkadot Prototype Ecosystem Open Sourcing Map](https://paritytech.github.io/w3s-architecture/assets/open-source-map.svg)
 
-🔗 **Live page:** https://paritytech.github.io/w3s-architecture/open-source-map.html · **Full-size image:** [SVG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/open-source-map.svg) · [PNG](https://raw.githubusercontent.com/paritytech/w3s-architecture/main/assets/open-source-map.png)
+🔗 **Live page:** https://paritytech.github.io/w3s-architecture/open-source-map.html · **Full-size image:** [SVG](https://paritytech.github.io/w3s-architecture/assets/open-source-map.svg) · [PNG](https://paritytech.github.io/w3s-architecture/assets/open-source-map.png)
 
 This repo tracks the W3S open sourcing map and the related repository list used to inspect/reference project sources.
 
 ## Map Workflow
 
-The map source of truth is `open-source-map.html`. The generated exports live in `assets/`:
+The map source of truth is `open-source-map.html`. The SVG/PNG exports are generated, not committed: they are built in CI and published to GitHub Pages after each merge to `main`, so the links above always show the latest map. Keeping them out of git avoids merge conflicts between concurrent PRs.
 
-- `assets/open-source-map.svg`
-- `assets/open-source-map.png`
-
-When you edit the map, update the `LAYERS` array in `open-source-map.html`, then regenerate the exports:
+When you edit the map, update the `LAYERS` array in `open-source-map.html`. To preview the exports locally, regenerate them (output lands in `assets/`, which is git-ignored):
 
 ```sh
 bash scripts/generate.sh
 ```
 
-The PR workflow compares the committed SVG export against `main`, comments a before/after preview, and fails if `assets/open-source-map.svg` is out of sync with `open-source-map.html`.
+The PR workflow regenerates the exports from both `main` and the PR branch, comments whether the map changed, and uploads the before/after assets as a downloadable artifact. After merge, the deploy workflow rebuilds the exports and publishes them to GitHub Pages.
+
+> [!NOTE]
+> Publishing requires GitHub Pages to use the GitHub Actions source (repo **Settings → Pages → Build and deployment → Source: GitHub Actions**). Without it the deploy workflow runs but nothing goes live.
 
 The live HTML page also renders a resizable Mega Doc viewer from the same `LAYERS` data. Items with Markdown `deployDoc` links are loaded into one scrollable document pane, each item section can be collapsed, missing docs render as placeholder sections, and `"NA"` docs are omitted from the pane. The generated SVG/PNG exports only include the map.
 
