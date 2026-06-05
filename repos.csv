@@ -1,8 +1,10 @@
 name,repo_name,url
 W3S Ticketing,tick3t,https://github.com/paritytech/tick3t/
 W3S Festival / Conference App,w3s-conference-app,https://github.com/paritytech/w3s-conference-app/
-T3rminal,t3rminal,https://github.com/paritytech/t3rminal
+T3rminal,t3rminal,https://github.com/paritytech/t3rminal/tree/main/apps/t3rminal-v1
 W3S Pay,t3rminal,https://github.com/paritytech/t3rminal/tree/main/apps/w3spay
+W3S Payment Processor,t3rminal,https://github.com/paritytech/t3rminal/tree/main/apps/w3s-receiver
+W3S Pay Admin,t3rminal,https://github.com/paritytech/t3rminal/tree/main/apps/w3spay-admin
 Contract Dependency Manager,contract-dependency-manager,https://github.com/paritytech/contract-dependency-manager
 Playground App,playground-app,https://github.com/paritytech/playground-app
 Playground CLI,playground-cli,https://github.com/paritytech/playground-cli
