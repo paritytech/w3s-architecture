@@ -21,6 +21,8 @@ bash scripts/generate.sh
 
 The PR workflow compares the committed SVG export against `main`, comments a before/after preview, and fails if `assets/open-source-map.svg` is out of sync with `open-source-map.html`.
 
+The live HTML page also renders a resizable Mega Doc viewer from the same `LAYERS` data. Items with Markdown `deployDoc` links are loaded into one scrollable document pane, each item section can be collapsed, missing docs render as placeholder sections, and `"NA"` docs are omitted from the pane. The generated SVG/PNG exports only include the map.
+
 ## Adding Map Items
 
 Add lanes or items in the `LAYERS` array in `open-source-map.html`.

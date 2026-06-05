@@ -23,9 +23,15 @@
     --internal-line: #e2e2e8;
     --internal-text: #6f6f78;
     --internal-muted: #aaaab2;
+    --doc-bg: #ffffff;
+    --doc-panel: #ffffff;
+    --doc-panel-soft: #fafafa;
+    --doc-line: #e2e2e8;
+    --doc-text: #25252c;
+    --doc-muted: #6b6b76;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
     background: var(--paper);
@@ -41,6 +47,7 @@
     top: 0;
     z-index: 10;
     backdrop-filter: saturate(140%) blur(6px);
+    flex: 0 0 auto;
   }
   .brand { display: flex; align-items: center; gap: 10px; }
   .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 4px var(--pink-soft); }
@@ -134,13 +141,228 @@
   }
   .chip.w3f { background: var(--internal-bg); border: 1.5px solid var(--internal-line); }
 
+  .app-shell {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .doc-pane {
+    width: var(--doc-pane-width, 360px);
+    min-width: 260px;
+    max-width: min(70vw, 920px);
+    height: 100vh;
+    flex: 0 0 auto;
+    background: var(--doc-bg);
+    border-right: 1px solid var(--doc-line);
+    color: var(--doc-text);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .doc-pane-head {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--doc-line);
+    padding: 14px 12px 12px;
+    backdrop-filter: saturate(140%) blur(8px);
+  }
+  .doc-pane-title-row {
+    display: flex;
+    align-items: center;
+  }
+  .doc-pane-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 750;
+    letter-spacing: -0.2px;
+  }
+  .doc-pane-sub {
+    margin: 6px 0 0;
+    color: var(--doc-muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .doc-pages {
+    padding: 12px 0 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .doc-page {
+    position: relative;
+    background: var(--doc-panel);
+    border-top: 1px solid var(--doc-line);
+    border-bottom: 1px solid var(--doc-line);
+    padding: 14px 12px 16px;
+    scroll-margin-top: 74px;
+  }
+  .doc-page.missing {
+    background: var(--doc-panel-soft);
+  }
+  .doc-page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+    cursor: pointer;
+  }
+  .doc-page-head:focus-visible {
+    outline: 2px solid rgba(230, 0, 122, 0.4);
+    outline-offset: 3px;
+  }
+  .doc-page-meta {
+    font-size: 10.5px;
+    font-weight: 750;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--doc-muted);
+  }
+  .doc-page h2 {
+    margin: 6px 0 8px;
+    font-size: 16px;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+  }
+  .doc-title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .doc-title-link:hover {
+    color: var(--pink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .doc-page-toggle {
+    width: 18px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--doc-muted);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    user-select: none;
+  }
+  .doc-page-head:hover .doc-page-toggle { color: var(--doc-text); }
+  .doc-page-toggle::before { content: "-"; }
+  .doc-page.is-collapsed .doc-page-toggle::before { content: "+"; }
+  .doc-page.is-collapsed .doc-page-content { display: none; }
+  .doc-page.is-collapsed { padding-bottom: 14px; }
+  .doc-page.is-targeted {
+    box-shadow: inset 3px 0 0 rgba(230, 0, 122, 0.55);
+  }
+  .doc-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    color: var(--doc-muted);
+    font-size: 12px;
+  }
+  .doc-status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--line);
+  }
+  .doc-status.ready::before { background: var(--ready); }
+  .doc-status.missing::before { background: #c1262d; }
+  .doc-status a {
+    color: var(--pink);
+    text-decoration: none;
+    font-weight: 650;
+  }
+  .doc-status a:hover { text-decoration: underline; }
+  .doc-body {
+    color: var(--doc-text);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .doc-body.loading,
+  .doc-body.empty {
+    color: var(--doc-muted);
+    font-style: italic;
+  }
+  .doc-body h1,
+  .doc-body h2,
+  .doc-body h3,
+  .doc-body h4 {
+    margin: 18px 0 8px;
+    line-height: 1.25;
+    letter-spacing: -0.1px;
+  }
+  .doc-body h1 { font-size: 20px; }
+  .doc-body h2 { font-size: 17px; }
+  .doc-body h3 { font-size: 15px; }
+  .doc-body h4 { font-size: 13px; }
+  .doc-body p { margin: 9px 0; }
+  .doc-body ul,
+  .doc-body ol { margin: 8px 0 10px 18px; padding: 0; }
+  .doc-body li { margin: 4px 0; }
+  .doc-body code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: #f1f1f4;
+    border: 1px solid #e5e5ea;
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+  .doc-body pre {
+    margin: 12px 0;
+    padding: 12px;
+    overflow-x: auto;
+    background: #f7f7f9;
+    border: 1px solid #e4e4ea;
+    border-radius: 7px;
+  }
+  .doc-body pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  .doc-body blockquote {
+    margin: 10px 0;
+    padding-left: 12px;
+    border-left: 3px solid var(--doc-line);
+    color: var(--doc-muted);
+  }
+  .doc-body a { color: var(--pink); text-decoration: none; }
+  .doc-body a:hover { text-decoration: underline; }
+  .doc-resizer {
+    width: 7px;
+    flex: 0 0 7px;
+    cursor: col-resize;
+    background: linear-gradient(90deg, #eeeef2, #fafafc);
+    border-right: 1px solid var(--line);
+  }
+  .doc-resizer:hover,
+  body.resizing-docs .doc-resizer { background: #e2e2e8; }
+  body.resizing-docs {
+    cursor: col-resize;
+    user-select: none;
+  }
+  .map-pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
   .board {
     display: flex;
     flex-direction: row;   /* Layer 1 (foundation) on the LEFT, apps on the RIGHT */
     gap: 0;
-    overflow-x: auto;
+    overflow: auto;
     padding: 26px 32px 56px;
     align-items: stretch;
+    min-height: 0;
+    flex: 1 1 auto;
   }
   .layer {
     flex: 1 0 300px;
@@ -237,19 +459,33 @@
 </head>
 <body>
 
-<header class="page">
-  <div class="brand"><span class="dot"></span><h1>Polkadot Prototype Ecosystem Open Sourcing Map</h1></div>
-  <div class="legend">
-    <span><i class="chip repo"></i> Repo + instructions available</span>
-    <span><i class="chip norepo"></i> No repo yet — handoff gap</span>
-    <span><i class="doc-badge">!</i> Missing deploy doc</span>
-    <span><i class="opensource-badge">!</i> Not open source yet</span>
-    <span><i class="ready-badge">✓</i> Checks met</span>
-    <span><i class="chip w3f"></i> Deployed internally</span>
-  </div>
-</header>
+<div class="app-shell">
+  <aside class="doc-pane" id="docPane" aria-label="Mega doc">
+    <div class="doc-pane-head">
+      <div class="doc-pane-title-row">
+        <h2 class="doc-pane-title">Mega Doc</h2>
+      </div>
+      <p class="doc-pane-sub">Markdown docs in phase order. Missing docs stay visible.</p>
+    </div>
+    <div class="doc-pages" id="docPages"></div>
+  </aside>
+  <div class="doc-resizer" id="docResizer" role="separator" aria-label="Resize mega doc panel"></div>
+  <main class="map-pane">
+    <header class="page">
+      <div class="brand"><span class="dot"></span><h1>Polkadot Prototype Ecosystem Open Sourcing Map</h1></div>
+      <div class="legend">
+        <span><i class="chip repo"></i> Repo + instructions available</span>
+        <span><i class="chip norepo"></i> No repo yet — handoff gap</span>
+        <span><i class="doc-badge">!</i> Missing deploy doc</span>
+        <span><i class="opensource-badge">!</i> Not open source yet</span>
+        <span><i class="ready-badge">✓</i> Checks met</span>
+        <span><i class="chip w3f"></i> Deployed internally</span>
+      </div>
+    </header>
 
-<div class="board" id="board"></div>
+    <div class="board" id="board"></div>
+  </main>
+</div>
 
 <script>
 // Layers ordered left-to-right. Layer 1 = foundation, apps/reference deployments later.
@@ -287,9 +523,9 @@ const LAYERS = [
     title: "SDKs / Developer Packages",
     sub: "Packages that downstream deploy tooling, clients, and apps consume.",
     items: [
-      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", w3f: true, openSource: false },
-      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", w3f: true, openSource: false },
-      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", w3f: true, openSource: false },
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", w3f: true, deployDoc: "NA", openSource: false },
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", w3f: true, deployDoc: "NA", openSource: false },
+      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", w3f: true, deployDoc: "NA", openSource: false },
     ]
   },
   {
@@ -362,6 +598,12 @@ const LAYERS = [
 ];
 
 const board = document.getElementById("board");
+const NO_DEPLOY_DOC = "NA";
+const docItemKey = (layerNum, itemIndex) => `${layerNum}-${itemIndex}`;
+const isDeployDocNotApplicable = item => item.deployDoc === NO_DEPLOY_DOC;
+const hasDeployDocValue = item => !!item.deployDoc;
+const deployDocLinkFor = item => isDeployDocNotApplicable(item) ? "" : item.deployDoc;
+const shouldRenderDocItem = item => !isDeployDocNotApplicable(item);
 
 LAYERS.forEach((layer, idx) => {
   const col = document.createElement("div");
@@ -377,12 +619,13 @@ LAYERS.forEach((layer, idx) => {
   `;
   const cards = col.querySelector(".cards");
 
-  layer.items.forEach(it => {
+  layer.items.forEach((it, itemIndex) => {
     const hasRepo = !!it.repo;
-    const deployDoc = it.deployDoc === "NA" ? "" : it.deployDoc;
+    const deployDoc = deployDocLinkFor(it);
     const clickTarget = deployDoc || it.repo;
     const el = document.createElement(clickTarget ? "a" : "div");
     el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
+    if (shouldRenderDocItem(it)) el.dataset.docKey = docItemKey(layer.num, itemIndex);
     if (clickTarget) { el.href = clickTarget; el.target = "_blank"; el.rel = "noopener"; }
 
     const repoShort = it.repo ? (it.repoLabel || it.repo.replace("https://github.com/", "")) : "";
@@ -390,7 +633,7 @@ LAYERS.forEach((layer, idx) => {
       !hasRepo ? `<span class="tag">no repo</span>` : "",
     ].filter(Boolean).join("");
     const tag = tags ? `<span class="tags">${tags}</span>` : "";
-    const hasDeployDocStatus = !!it.deployDoc;
+    const hasDeployDocStatus = hasDeployDocValue(it);
     const checksMet = it.openSource === true && hasDeployDocStatus;
     const missingDoc = hasDeployDocStatus ? "" : `<span class="doc-badge" title="Missing deploy doc">!</span>`;
     const notOpenSource = it.openSource === false ? `<span class="opensource-badge" title="Not open source yet">!</span>` : "";
@@ -408,6 +651,393 @@ LAYERS.forEach((layer, idx) => {
 
   board.appendChild(col);
 });
+
+const docPane = document.getElementById("docPane");
+const docPages = document.getElementById("docPages");
+const docResizer = document.getElementById("docResizer");
+
+const allDocItems = LAYERS.flatMap(layer =>
+  layer.items.map((item, itemIndex) => ({ ...item, layerNum: layer.num, layerTitle: layer.title, itemIndex }))
+);
+const docItems = allDocItems.filter(shouldRenderDocItem);
+
+const escapeHtml = value => String(value)
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
+
+const safeHref = (href, baseUrl = window.location.href) => {
+  try {
+    const url = new URL(href, baseUrl);
+    if (["http:", "https:", "mailto:"].includes(url.protocol)) return url.href;
+  } catch (_) {
+    return "#";
+  }
+  return "#";
+};
+
+const slugify = value => String(value)
+  .toLowerCase()
+  .replace(/`([^`]+)`/g, "$1")
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+  .replace(/<[^>]+>/g, "")
+  .replace(/[^\w\s-]/g, "")
+  .trim()
+  .replace(/\s+/g, "-");
+
+const docSectionId = (item, index) => `deploy-doc-${index}-${slugify(item.name) || "item"}`;
+
+const docState = item => {
+  if (!hasDeployDocValue(item)) return "missing";
+  if (isDeployDocNotApplicable(item)) return "na";
+  return "ready";
+};
+
+const resolveMarkdownSource = docUrl => {
+  const source = new URL(docUrl, window.location.href);
+  const section = source.hash ? source.hash.slice(1) : "";
+  source.hash = "";
+
+  if (source.hostname === "github.com") {
+    const parts = source.pathname.split("/").filter(Boolean);
+    const blobIndex = parts.indexOf("blob");
+    if (blobIndex === 2 && parts.length > 4) {
+      const [owner, repo] = parts;
+      const branch = parts[blobIndex + 1];
+      const filePath = parts.slice(blobIndex + 2).join("/");
+      return {
+        url: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`,
+        section,
+      };
+    }
+  }
+
+  return { url: source.href, section };
+};
+
+const extractMarkdownSection = (markdown, section) => {
+  if (!section) return markdown;
+
+  const target = decodeURIComponent(section).replace(/^user-content-/, "");
+  const lines = markdown.split(/\r?\n/);
+  let start = -1;
+  let level = 0;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (!match) continue;
+    if (slugify(match[2]) === target) {
+      start = i;
+      level = match[1].length;
+      break;
+    }
+  }
+
+  if (start === -1) return markdown;
+
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    const match = lines[i].match(/^(#{1,6})\s+/);
+    if (match && match[1].length <= level) {
+      end = i;
+      break;
+    }
+  }
+
+  return lines.slice(start, end).join("\n");
+};
+
+const formatInlineMarkdown = (text, baseUrl) => {
+  const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let output = "";
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(linkPattern)) {
+    output += escapeHtml(text.slice(lastIndex, match.index));
+    output += `<a href="${escapeHtml(safeHref(match[2], baseUrl))}" target="_blank" rel="noopener">${escapeHtml(match[1])}</a>`;
+    lastIndex = match.index + match[0].length;
+  }
+
+  output += escapeHtml(text.slice(lastIndex));
+  output = output.replace(/`([^`]+)`/g, "<code>$1</code>");
+  output = output.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  return output;
+};
+
+const renderMarkdown = (markdown, baseUrl) => {
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  let html = "";
+  let paragraph = [];
+  let listType = "";
+  let inCode = false;
+  let codeLines = [];
+
+  const closeList = () => {
+    if (!listType) return;
+    html += `</${listType}>`;
+    listType = "";
+  };
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    html += `<p>${paragraph.join(" ")}</p>`;
+    paragraph = [];
+  };
+
+  const openList = type => {
+    if (listType === type) return;
+    closeList();
+    html += `<${type}>`;
+    listType = type;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (inCode) {
+      if (trimmed.startsWith("```")) {
+        html += `<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`;
+        codeLines = [];
+        inCode = false;
+      } else {
+        codeLines.push(line);
+      }
+      continue;
+    }
+
+    if (trimmed.startsWith("```")) {
+      flushParagraph();
+      closeList();
+      inCode = true;
+      continue;
+    }
+
+    if (!trimmed) {
+      flushParagraph();
+      closeList();
+      continue;
+    }
+
+    const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      closeList();
+      const level = heading[1].length;
+      html += `<h${level}>${formatInlineMarkdown(heading[2], baseUrl)}</h${level}>`;
+      continue;
+    }
+
+    if (/^[-*_]{3,}$/.test(trimmed)) {
+      flushParagraph();
+      closeList();
+      html += "<hr>";
+      continue;
+    }
+
+    const unordered = trimmed.match(/^[-*]\s+(.+)$/);
+    if (unordered) {
+      flushParagraph();
+      openList("ul");
+      html += `<li>${formatInlineMarkdown(unordered[1], baseUrl)}</li>`;
+      continue;
+    }
+
+    const ordered = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (ordered) {
+      flushParagraph();
+      openList("ol");
+      html += `<li>${formatInlineMarkdown(ordered[1], baseUrl)}</li>`;
+      continue;
+    }
+
+    const quote = trimmed.match(/^>\s?(.+)$/);
+    if (quote) {
+      flushParagraph();
+      closeList();
+      html += `<blockquote>${formatInlineMarkdown(quote[1], baseUrl)}</blockquote>`;
+      continue;
+    }
+
+    paragraph.push(formatInlineMarkdown(trimmed, baseUrl));
+  }
+
+  if (inCode) html += `<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`;
+  flushParagraph();
+  closeList();
+
+  return html || `<p>No deploy document content found.</p>`;
+};
+
+const renderDocShells = () => {
+  docPages.innerHTML = docItems.map((item, index) => {
+    const state = docState(item);
+    const id = docSectionId(item, index);
+    const title = item.repo
+      ? `<a class="doc-title-link" href="${escapeHtml(safeHref(item.repo))}" target="_blank" rel="noopener">${escapeHtml(item.name)}</a>`
+      : escapeHtml(item.name);
+    const status =
+      state === "ready"
+        ? `Deploy doc available · <a href="${escapeHtml(safeHref(item.deployDoc))}" target="_blank" rel="noopener">Open doc</a>`
+        : state === "na"
+          ? "Deploy doc not applicable"
+          : "Deploy doc missing";
+    const body =
+      state === "ready"
+        ? `<div class="doc-body loading" id="${id}-body">Loading deploy doc...</div>`
+        : state === "na"
+          ? `<div class="doc-body empty">This item is marked as not requiring a deploy doc.</div>`
+          : `<div class="doc-body empty">No deploy doc has been linked for this item yet.</div>`;
+
+    return `
+      <section class="doc-page ${state}" id="${id}" data-doc-key="${escapeHtml(docItemKey(item.layerNum, item.itemIndex))}">
+        <div class="doc-page-head" role="button" tabindex="0" aria-controls="${id}-content" aria-expanded="true">
+          <div>
+            <div class="doc-page-meta">Phase ${item.layerNum} · ${escapeHtml(item.layerTitle)}</div>
+            <h2>${title}</h2>
+          </div>
+          <span class="doc-page-toggle" aria-hidden="true"></span>
+        </div>
+        <div class="doc-page-content" id="${id}-content">
+          <div class="doc-status ${state}">${status}</div>
+          ${body}
+        </div>
+      </section>
+    `;
+  }).join("");
+};
+
+const loadDeployDocs = async () => {
+  await Promise.all(docItems.map(async (item, index) => {
+    if (docState(item) !== "ready") return;
+
+    const id = docSectionId(item, index);
+    const body = document.getElementById(`${id}-body`);
+    if (!body) return;
+
+    try {
+      const source = resolveMarkdownSource(item.deployDoc);
+      const response = await fetch(source.url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const markdown = extractMarkdownSection(await response.text(), source.section);
+      body.classList.remove("loading");
+      body.innerHTML = renderMarkdown(markdown, source.url);
+    } catch (error) {
+      body.classList.remove("loading");
+      body.classList.add("empty");
+      body.innerHTML = `Could not load this Markdown file in the page. <a href="${escapeHtml(item.deployDoc)}" target="_blank" rel="noopener">Open it directly</a>.`;
+    }
+  }));
+};
+
+const initDocPaneResize = () => {
+  const min = 280;
+  const max = () => Math.min(window.innerWidth * 0.72, 940);
+
+  try {
+    const savedWidth = Number(localStorage.getItem("docPaneWidth"));
+    if (savedWidth) docPane.style.width = `${Math.max(min, Math.min(savedWidth, max()))}px`;
+  } catch (_) {}
+
+  const setWidth = clientX => {
+    const width = Math.max(min, Math.min(clientX, max()));
+    docPane.style.width = `${width}px`;
+    try { localStorage.setItem("docPaneWidth", String(Math.round(width))); } catch (_) {}
+  };
+
+  docResizer.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    document.body.classList.add("resizing-docs");
+    docResizer.setPointerCapture(event.pointerId);
+
+    const onMove = moveEvent => setWidth(moveEvent.clientX);
+    const onUp = upEvent => {
+      document.body.classList.remove("resizing-docs");
+      docResizer.releasePointerCapture(upEvent.pointerId);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  });
+
+  docResizer.addEventListener("dblclick", () => {
+    docPane.style.width = "";
+    try { localStorage.removeItem("docPaneWidth"); } catch (_) {}
+  });
+};
+
+const toggleDocSection = section => {
+  if (!section) return;
+
+  const collapsed = section.classList.toggle("is-collapsed");
+  const head = section.querySelector(".doc-page-head");
+  const title = section.querySelector("h2")?.textContent || "doc";
+
+  head?.setAttribute("aria-expanded", String(!collapsed));
+  head?.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} ${title} section`);
+};
+
+const initDocPageCollapse = () => {
+  docPages.addEventListener("click", event => {
+    if (event.target.closest("a")) return;
+
+    const head = event.target.closest(".doc-page-head");
+    if (!head) return;
+
+    toggleDocSection(head.closest(".doc-page"));
+  });
+
+  docPages.addEventListener("keydown", event => {
+    if (!["Enter", " "].includes(event.key)) return;
+
+    const head = event.target.closest(".doc-page-head");
+    if (!head) return;
+
+    event.preventDefault();
+    toggleDocSection(head.closest(".doc-page"));
+  });
+};
+
+const scrollDocToCard = card => {
+  const key = card.dataset.docKey;
+  if (!key) return;
+
+  const section = docPages.querySelector(`.doc-page[data-doc-key="${key}"]`);
+  if (!section) return;
+
+  section.classList.remove("is-collapsed");
+  section.querySelector(".doc-page-head")?.setAttribute("aria-expanded", "true");
+  docPages.querySelectorAll(".doc-page.is-targeted").forEach(el => {
+    if (el !== section) el.classList.remove("is-targeted");
+  });
+  section.classList.add("is-targeted");
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const initMapDocSync = () => {
+  let currentKey = "";
+
+  board.addEventListener("mouseover", event => {
+    const card = event.target.closest(".card[data-doc-key]");
+    if (!card || card.dataset.docKey === currentKey) return;
+
+    currentKey = card.dataset.docKey;
+    scrollDocToCard(card);
+  });
+
+  board.addEventListener("focusin", event => {
+    const card = event.target.closest(".card[data-doc-key]");
+    if (card) scrollDocToCard(card);
+  });
+};
+
+renderDocShells();
+loadDeployDocs();
+initDocPaneResize();
+initDocPageCollapse();
+initMapDocSync();
 </script>
 </body>
 </html>
