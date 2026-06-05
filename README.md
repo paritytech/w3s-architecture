@@ -18,6 +18,9 @@ bash scripts/generate.sh
 
 The PR workflow regenerates the exports from both `main` and the PR branch, comments whether the map changed, and uploads the before/after assets as a downloadable artifact. After merge, the deploy workflow rebuilds the exports and publishes them to GitHub Pages.
 
+> [!NOTE]
+> Publishing requires GitHub Pages to use the GitHub Actions source (repo **Settings → Pages → Build and deployment → Source: GitHub Actions**). Without it the deploy workflow runs but nothing goes live.
+
 The live HTML page also renders a resizable Mega Doc viewer from the same `LAYERS` data. Items with Markdown `deployDoc` links are loaded into one scrollable document pane, each item section can be collapsed, missing docs render as placeholder sections, and `"NA"` docs are omitted from the pane. The generated SVG/PNG exports only include the map.
 
 ## Adding Map Items

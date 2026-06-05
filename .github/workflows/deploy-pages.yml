@@ -38,7 +38,6 @@ jobs:
 
       - name: Assemble site
         run: |
-          set -euo pipefail
           mkdir -p _site/assets
           cp index.html open-source-map.html _site/
           cp assets/open-source-map.svg assets/open-source-map.png _site/assets/
