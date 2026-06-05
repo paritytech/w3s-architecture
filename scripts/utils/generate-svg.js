@@ -17,6 +17,7 @@ const C = {
   line: "#d9d9e0", muted: "#6b6b76", warn: "#b25b00", warnBg: "#fff4e3", gray: "#888888",
   noDoc: "#c1262d", notOpenSource: "#f4c430", notOpenSourceText: "#4a3000",
   ready: "#238636", readyText: "#ffffff",
+  internalBg: "#ededf1", internalLine: "#e2e2e8", internalText: "#6f6f78", internalMuted: "#aaaab2",
 };
 
 // ---- layout constants ----
@@ -99,7 +100,7 @@ const readyLegend = () => {
   lx += 26 + "Checks met".length * 6.4 + 26;
 };
 readyLegend();
-legendItem(C.card, C.line, false, "Deployed internally", true);
+legendItem(C.internalBg, C.internalLine, false, "Deployed internally", false);
 
 // ---- columns ----
 LAYERS.forEach((layer, i) => {
@@ -142,16 +143,15 @@ LAYERS.forEach((layer, i) => {
     const open = clickTarget ? `<a xlink:href="${esc(clickTarget)}" href="${esc(clickTarget)}" target="_blank">` : "";
     const close = clickTarget ? `</a>` : "";
 
-    const fill = hasRepo ? C.card : C.warnBg;
-    const stroke = hasRepo ? C.line : C.warn;
-    const dash = hasRepo ? "" : ` stroke-dasharray="4 3"`;
+    const fill = isInt ? C.internalBg : hasRepo ? C.card : C.warnBg;
+    const stroke = isInt ? C.internalLine : hasRepo ? C.line : C.warn;
+    const dash = !hasRepo && !isInt ? ` stroke-dasharray="4 3"` : "";
 
     parts.push(open);
     parts.push(
       `<rect x="${cx}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="9" fill="${fill}" ` +
       `stroke="${stroke}" stroke-width="1.5"${dash}/>`
     );
-    if (isInt) parts.push(`<rect x="${cx}" y="${y}" width="3" height="${CARD_H}" rx="1.5" fill="${C.gray}"/>`);
 
     if (!it.deployDoc) {
       parts.push(`<circle cx="${cx + 1}" cy="${y + 1}" r="9" fill="${C.noDoc}" stroke="${C.paper}" stroke-width="2"/>`);
@@ -178,11 +178,10 @@ LAYERS.forEach((layer, i) => {
     // tags
     const tags = [
       !hasRepo ? { text: "no repo", color: C.warn } : null,
-      isInt ? { text: "internal", color: C.gray } : null,
     ].filter(Boolean);
 
     // name
-    const nameColor = hasRepo ? C.ink : C.warn;
+    const nameColor = isInt ? C.internalText : hasRepo ? C.ink : C.warn;
     const nameMax = hasRepo ? 30 : 32;
     parts.push(
       `<text x="${cx + 13}" y="${y + (hasRepo ? 22 : 23)}" font-size="13" font-weight="600" ` +
@@ -193,7 +192,7 @@ LAYERS.forEach((layer, i) => {
     if (hasRepo) {
       parts.push(
         `<text x="${cx + 13}" y="${y + 40}" font-size="10.5" font-family="${MONO}" ` +
-        `fill="${C.muted}">${esc(trunc(repoShort, 36))}</text>`
+        `fill="${isInt ? C.internalMuted : C.muted}">${esc(trunc(repoShort, 36))}</text>`
       );
     }
 

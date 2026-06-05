@@ -29,7 +29,7 @@ Item fields:
 
 - `name`: display name on the board.
 - `repo`: GitHub URL, or `null` when there is no repo yet.
-- `w3f`: set to `true` for internally deployed items.
+- `w3f`: set to `true` for internally deployed items. Internal items render as muted grey cards.
 - `deployDoc`: link to the deployment document when one exists. Use `"NA"` when a deploy doc is intentionally not applicable.
 - `openSource`: set to `true` when the repo is public/open source, or `false` when it is private or there is no repo yet.
 
