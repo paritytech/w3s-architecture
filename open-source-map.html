@@ -197,17 +197,21 @@
     border-top: 1px solid var(--doc-line);
     border-bottom: 1px solid var(--doc-line);
     padding: 14px 12px 16px;
+    scroll-margin-top: 74px;
   }
   .doc-page.missing {
     background: var(--doc-panel-soft);
-    border-top-style: dashed;
-    border-bottom-style: dashed;
   }
   .doc-page-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     align-items: start;
+    cursor: pointer;
+  }
+  .doc-page-head:focus-visible {
+    outline: 2px solid rgba(230, 0, 122, 0.4);
+    outline-offset: 3px;
   }
   .doc-page-meta {
     font-size: 10.5px;
@@ -222,26 +226,35 @@
     line-height: 1.2;
     letter-spacing: -0.2px;
   }
+  .doc-title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .doc-title-link:hover {
+    color: var(--pink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
   .doc-page-toggle {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 22px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--doc-line);
-    border-radius: 6px;
-    background: #fff;
     color: var(--doc-muted);
-    cursor: pointer;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1;
+    user-select: none;
   }
-  .doc-page-toggle:hover { color: var(--doc-text); border-color: #cfcfd8; }
+  .doc-page-head:hover .doc-page-toggle { color: var(--doc-text); }
   .doc-page-toggle::before { content: "-"; }
   .doc-page.is-collapsed .doc-page-toggle::before { content: "+"; }
   .doc-page.is-collapsed .doc-page-content { display: none; }
   .doc-page.is-collapsed { padding-bottom: 14px; }
+  .doc-page.is-targeted {
+    box-shadow: inset 3px 0 0 rgba(230, 0, 122, 0.55);
+  }
   .doc-status {
     display: inline-flex;
     align-items: center;
@@ -510,9 +523,9 @@ const LAYERS = [
     title: "SDKs / Developer Packages",
     sub: "Packages that downstream deploy tooling, clients, and apps consume.",
     items: [
-      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", w3f: true, openSource: false },
-      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", w3f: true, openSource: false },
-      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", w3f: true, openSource: false },
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", w3f: true, deployDoc: "NA", openSource: false },
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", w3f: true, deployDoc: "NA", openSource: false },
+      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", w3f: true, deployDoc: "NA", openSource: false },
     ]
   },
   {
@@ -585,6 +598,12 @@ const LAYERS = [
 ];
 
 const board = document.getElementById("board");
+const NO_DEPLOY_DOC = "NA";
+const docItemKey = (layerNum, itemIndex) => `${layerNum}-${itemIndex}`;
+const isDeployDocNotApplicable = item => item.deployDoc === NO_DEPLOY_DOC;
+const hasDeployDocValue = item => !!item.deployDoc;
+const deployDocLinkFor = item => isDeployDocNotApplicable(item) ? "" : item.deployDoc;
+const shouldRenderDocItem = item => !isDeployDocNotApplicable(item);
 
 LAYERS.forEach((layer, idx) => {
   const col = document.createElement("div");
@@ -600,12 +619,13 @@ LAYERS.forEach((layer, idx) => {
   `;
   const cards = col.querySelector(".cards");
 
-  layer.items.forEach(it => {
+  layer.items.forEach((it, itemIndex) => {
     const hasRepo = !!it.repo;
-    const deployDoc = it.deployDoc === "NA" ? "" : it.deployDoc;
+    const deployDoc = deployDocLinkFor(it);
     const clickTarget = deployDoc || it.repo;
     const el = document.createElement(clickTarget ? "a" : "div");
     el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
+    if (shouldRenderDocItem(it)) el.dataset.docKey = docItemKey(layer.num, itemIndex);
     if (clickTarget) { el.href = clickTarget; el.target = "_blank"; el.rel = "noopener"; }
 
     const repoShort = it.repo ? (it.repoLabel || it.repo.replace("https://github.com/", "")) : "";
@@ -613,7 +633,7 @@ LAYERS.forEach((layer, idx) => {
       !hasRepo ? `<span class="tag">no repo</span>` : "",
     ].filter(Boolean).join("");
     const tag = tags ? `<span class="tags">${tags}</span>` : "";
-    const hasDeployDocStatus = !!it.deployDoc;
+    const hasDeployDocStatus = hasDeployDocValue(it);
     const checksMet = it.openSource === true && hasDeployDocStatus;
     const missingDoc = hasDeployDocStatus ? "" : `<span class="doc-badge" title="Missing deploy doc">!</span>`;
     const notOpenSource = it.openSource === false ? `<span class="opensource-badge" title="Not open source yet">!</span>` : "";
@@ -639,7 +659,7 @@ const docResizer = document.getElementById("docResizer");
 const allDocItems = LAYERS.flatMap(layer =>
   layer.items.map((item, itemIndex) => ({ ...item, layerNum: layer.num, layerTitle: layer.title, itemIndex }))
 );
-const docItems = allDocItems.filter(item => item.deployDoc !== "NA");
+const docItems = allDocItems.filter(shouldRenderDocItem);
 
 const escapeHtml = value => String(value)
   .replace(/&/g, "&amp;")
@@ -669,8 +689,8 @@ const slugify = value => String(value)
 const docSectionId = (item, index) => `deploy-doc-${index}-${slugify(item.name) || "item"}`;
 
 const docState = item => {
-  if (!item.deployDoc) return "missing";
-  if (item.deployDoc === "NA") return "na";
+  if (!hasDeployDocValue(item)) return "missing";
+  if (isDeployDocNotApplicable(item)) return "na";
   return "ready";
 };
 
@@ -853,6 +873,9 @@ const renderDocShells = () => {
   docPages.innerHTML = docItems.map((item, index) => {
     const state = docState(item);
     const id = docSectionId(item, index);
+    const title = item.repo
+      ? `<a class="doc-title-link" href="${escapeHtml(safeHref(item.repo))}" target="_blank" rel="noopener">${escapeHtml(item.name)}</a>`
+      : escapeHtml(item.name);
     const status =
       state === "ready"
         ? `Deploy doc available · <a href="${escapeHtml(safeHref(item.deployDoc))}" target="_blank" rel="noopener">Open doc</a>`
@@ -867,13 +890,13 @@ const renderDocShells = () => {
           : `<div class="doc-body empty">No deploy doc has been linked for this item yet.</div>`;
 
     return `
-      <section class="doc-page ${state}" id="${id}">
-        <div class="doc-page-head">
+      <section class="doc-page ${state}" id="${id}" data-doc-key="${escapeHtml(docItemKey(item.layerNum, item.itemIndex))}">
+        <div class="doc-page-head" role="button" tabindex="0" aria-controls="${id}-content" aria-expanded="true">
           <div>
             <div class="doc-page-meta">Phase ${item.layerNum} · ${escapeHtml(item.layerTitle)}</div>
-            <h2>${escapeHtml(item.name)}</h2>
+            <h2>${title}</h2>
           </div>
-          <button class="doc-page-toggle" type="button" aria-expanded="true" aria-controls="${id}-content" aria-label="Collapse ${escapeHtml(item.name)} section"></button>
+          <span class="doc-page-toggle" aria-hidden="true"></span>
         </div>
         <div class="doc-page-content" id="${id}-content">
           <div class="doc-status ${state}">${status}</div>
@@ -945,17 +968,68 @@ const initDocPaneResize = () => {
   });
 };
 
+const toggleDocSection = section => {
+  if (!section) return;
+
+  const collapsed = section.classList.toggle("is-collapsed");
+  const head = section.querySelector(".doc-page-head");
+  const title = section.querySelector("h2")?.textContent || "doc";
+
+  head?.setAttribute("aria-expanded", String(!collapsed));
+  head?.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} ${title} section`);
+};
+
 const initDocPageCollapse = () => {
   docPages.addEventListener("click", event => {
-    const toggle = event.target.closest(".doc-page-toggle");
-    if (!toggle) return;
+    if (event.target.closest("a")) return;
 
-    const section = toggle.closest(".doc-page");
-    const collapsed = section.classList.toggle("is-collapsed");
-    const title = section.querySelector("h2")?.textContent || "doc";
+    const head = event.target.closest(".doc-page-head");
+    if (!head) return;
 
-    toggle.setAttribute("aria-expanded", String(!collapsed));
-    toggle.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} ${title} section`);
+    toggleDocSection(head.closest(".doc-page"));
+  });
+
+  docPages.addEventListener("keydown", event => {
+    if (!["Enter", " "].includes(event.key)) return;
+
+    const head = event.target.closest(".doc-page-head");
+    if (!head) return;
+
+    event.preventDefault();
+    toggleDocSection(head.closest(".doc-page"));
+  });
+};
+
+const scrollDocToCard = card => {
+  const key = card.dataset.docKey;
+  if (!key) return;
+
+  const section = docPages.querySelector(`.doc-page[data-doc-key="${key}"]`);
+  if (!section) return;
+
+  section.classList.remove("is-collapsed");
+  section.querySelector(".doc-page-head")?.setAttribute("aria-expanded", "true");
+  docPages.querySelectorAll(".doc-page.is-targeted").forEach(el => {
+    if (el !== section) el.classList.remove("is-targeted");
+  });
+  section.classList.add("is-targeted");
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const initMapDocSync = () => {
+  let currentKey = "";
+
+  board.addEventListener("mouseover", event => {
+    const card = event.target.closest(".card[data-doc-key]");
+    if (!card || card.dataset.docKey === currentKey) return;
+
+    currentKey = card.dataset.docKey;
+    scrollDocToCard(card);
+  });
+
+  board.addEventListener("focusin", event => {
+    const card = event.target.closest(".card[data-doc-key]");
+    if (card) scrollDocToCard(card);
   });
 };
 
@@ -963,6 +1037,7 @@ renderDocShells();
 loadDeployDocs();
 initDocPaneResize();
 initDocPageCollapse();
+initMapDocSync();
 </script>
 </body>
 </html>
