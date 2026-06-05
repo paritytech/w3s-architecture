@@ -19,6 +19,10 @@
     --source-warn-text: #4a3000;
     --ready: #238636;
     --ready-text: #ffffff;
+    --internal-bg: #ededf1;
+    --internal-line: #e2e2e8;
+    --internal-text: #6f6f78;
+    --internal-muted: #aaaab2;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -128,7 +132,7 @@
     border-width: 0;
     font-size: 11px;
   }
-  .chip.w3f { background: var(--card); border: 1.5px solid var(--line); box-shadow: inset 3px 0 0 #888; }
+  .chip.w3f { background: var(--internal-bg); border: 1.5px solid var(--internal-line); }
 
   .board {
     display: flex;
@@ -213,9 +217,19 @@
     white-space: nowrap;
     text-decoration: none;
   }
-  .tag.w3f { background: #888; }
-
-  .card.w3f { box-shadow: inset 3px 0 0 #888; }
+  .card.w3f {
+    background: var(--internal-bg);
+    border-color: var(--internal-line);
+    color: var(--internal-text);
+    box-shadow: none;
+  }
+  .card.w3f.hasrepo:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--internal-line);
+  }
+  .card.w3f .name .label { color: var(--internal-text); font-weight: 600; }
+  .card.w3f .repo { color: var(--internal-muted); }
 
   footer { padding: 18px 32px 40px; color: #9a9aa4; font-size: 11.5px; }
   footer code { font-family: ui-monospace, Menlo, monospace; }
@@ -273,9 +287,9 @@ const LAYERS = [
     title: "SDKs / Developer Packages",
     sub: "Packages that downstream deploy tooling, clients, and apps consume.",
     items: [
-      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", openSource: false },
-      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", openSource: false },
-      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", openSource: false },
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", w3f: true, openSource: false },
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", w3f: true, openSource: false },
+      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", w3f: true, openSource: false },
     ]
   },
   {
@@ -374,7 +388,6 @@ LAYERS.forEach((layer, idx) => {
     const repoShort = it.repo ? (it.repoLabel || it.repo.replace("https://github.com/", "")) : "";
     const tags = [
       !hasRepo ? `<span class="tag">no repo</span>` : "",
-      it.w3f ? `<span class="tag w3f">internal</span>` : "",
     ].filter(Boolean).join("");
     const tag = tags ? `<span class="tags">${tags}</span>` : "";
     const hasDeployDocStatus = !!it.deployDoc;
