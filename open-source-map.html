@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Polkadot Prototype — Open Sourcing Map</title>
+<style>
+  :root {
+    --pink: #e6007a;
+    --pink-soft: #ffd6ec;
+    --ink: #0d0d12;
+    --paper: #f5f5f7;
+    --card: #ffffff;
+    --muted: #6b6b76;
+    --line: #d9d9e0;
+    --warn: #b25b00;
+    --warn-bg: #fff4e3;
+    --source-warn: #f4c430;
+    --source-warn-text: #4a3000;
+    --ready: #238636;
+    --ready-text: #ffffff;
+    --internal-bg: #ededf1;
+    --internal-line: #e2e2e8;
+    --internal-text: #6f6f78;
+    --internal-muted: #aaaab2;
+    --doc-bg: #ffffff;
+    --doc-panel: #ffffff;
+    --doc-panel-soft: #fafafa;
+    --doc-line: #e2e2e8;
+    --doc-text: #25252c;
+    --doc-muted: #6b6b76;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.page {
+    padding: 28px 32px 22px;
+    background: linear-gradient(180deg, #fff 0%, #fafafc 100%);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: saturate(140%) blur(6px);
+    flex: 0 0 auto;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 4px var(--pink-soft); }
+  header.page h1 { font-size: 22px; margin: 0; letter-spacing: -0.3px; }
+  header.page p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; max-width: 980px; line-height: 1.5; }
+  .flow-hint {
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 600; color: var(--pink);
+    background: var(--pink-soft); padding: 6px 12px; border-radius: 999px;
+  }
+  .legend { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .chip { width: 26px; height: 14px; border-radius: 4px; display: inline-block; }
+  .chip.repo { background: var(--card); border: 1.5px solid var(--line); }
+  .chip.norepo { background: var(--warn-bg); border: 1.5px dashed var(--warn); }
+  .doc-badge {
+    position: absolute;
+    top: -7px;
+    left: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #c1262d;
+    color: #fff;
+    border: 2px solid var(--paper);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    z-index: 2;
+  }
+  .opensource-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--source-warn);
+    color: var(--source-warn-text);
+    border: 2px solid var(--paper);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    z-index: 2;
+  }
+  .ready-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ready);
+    color: var(--ready-text);
+    border: 2px solid var(--paper);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    z-index: 2;
+  }
+  .legend .doc-badge {
+    position: static;
+    width: 16px;
+    height: 16px;
+    border-width: 0;
+    font-size: 11px;
+  }
+  .legend .opensource-badge {
+    position: static;
+    width: 16px;
+    height: 16px;
+    border-width: 0;
+    font-size: 11px;
+  }
+  .legend .ready-badge {
+    position: static;
+    width: 16px;
+    height: 16px;
+    border-width: 0;
+    font-size: 11px;
+  }
+  .chip.w3f { background: var(--internal-bg); border: 1.5px solid var(--internal-line); }
+
+  .app-shell {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .doc-pane {
+    width: var(--doc-pane-width, 360px);
+    min-width: 260px;
+    max-width: min(70vw, 920px);
+    height: 100vh;
+    flex: 0 0 auto;
+    background: var(--doc-bg);
+    border-right: 1px solid var(--doc-line);
+    color: var(--doc-text);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .doc-pane-head {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--doc-line);
+    padding: 14px 12px 12px;
+    backdrop-filter: saturate(140%) blur(8px);
+  }
+  .doc-pane-title-row {
+    display: flex;
+    align-items: center;
+  }
+  .doc-pane-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 750;
+    letter-spacing: -0.2px;
+  }
+  .doc-pane-sub {
+    margin: 6px 0 0;
+    color: var(--doc-muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .doc-pages {
+    padding: 12px 0 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .doc-page {
+    position: relative;
+    background: var(--doc-panel);
+    border-top: 1px solid var(--doc-line);
+    border-bottom: 1px solid var(--doc-line);
+    padding: 14px 12px 16px;
+    scroll-margin-top: 74px;
+  }
+  .doc-page.missing {
+    background: var(--doc-panel-soft);
+  }
+  .doc-page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+    cursor: pointer;
+  }
+  .doc-page-head:focus-visible {
+    outline: 2px solid rgba(230, 0, 122, 0.4);
+    outline-offset: 3px;
+  }
+  .doc-page-meta {
+    font-size: 10.5px;
+    font-weight: 750;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--doc-muted);
+  }
+  .doc-page h2 {
+    margin: 6px 0 8px;
+    font-size: 16px;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+  }
+  .doc-title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .doc-title-link:hover {
+    color: var(--pink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .doc-page-toggle {
+    width: 18px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--doc-muted);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    user-select: none;
+  }
+  .doc-page-head:hover .doc-page-toggle { color: var(--doc-text); }
+  .doc-page-toggle::before { content: "-"; }
+  .doc-page.is-collapsed .doc-page-toggle::before { content: "+"; }
+  .doc-page.is-collapsed .doc-page-content { display: none; }
+  .doc-page.is-collapsed { padding-bottom: 14px; }
+  .doc-page.is-targeted {
+    box-shadow: inset 3px 0 0 rgba(230, 0, 122, 0.55);
+  }
+  .doc-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    color: var(--doc-muted);
+    font-size: 12px;
+  }
+  .doc-status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--line);
+  }
+  .doc-status.ready::before { background: var(--ready); }
+  .doc-status.missing::before { background: #c1262d; }
+  .doc-status a {
+    color: var(--pink);
+    text-decoration: none;
+    font-weight: 650;
+  }
+  .doc-status a:hover { text-decoration: underline; }
+  .doc-body {
+    color: var(--doc-text);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .doc-body.loading,
+  .doc-body.empty {
+    color: var(--doc-muted);
+    font-style: italic;
+  }
+  .doc-body h1,
+  .doc-body h2,
+  .doc-body h3,
+  .doc-body h4 {
+    margin: 18px 0 8px;
+    line-height: 1.25;
+    letter-spacing: -0.1px;
+  }
+  .doc-body h1 { font-size: 20px; }
+  .doc-body h2 { font-size: 17px; }
+  .doc-body h3 { font-size: 15px; }
+  .doc-body h4 { font-size: 13px; }
+  .doc-body p { margin: 9px 0; }
+  .doc-body ul,
+  .doc-body ol { margin: 8px 0 10px 18px; padding: 0; }
+  .doc-body li { margin: 4px 0; }
+  .doc-body code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: #f1f1f4;
+    border: 1px solid #e5e5ea;
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+  .doc-body pre {
+    margin: 12px 0;
+    padding: 12px;
+    overflow-x: auto;
+    background: #f7f7f9;
+    border: 1px solid #e4e4ea;
+    border-radius: 7px;
+  }
+  .doc-body pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  .doc-body blockquote {
+    margin: 10px 0;
+    padding-left: 12px;
+    border-left: 3px solid var(--doc-line);
+    color: var(--doc-muted);
+  }
+  .doc-body a { color: var(--pink); text-decoration: none; }
+  .doc-body a:hover { text-decoration: underline; }
+  .doc-resizer {
+    width: 7px;
+    flex: 0 0 7px;
+    cursor: col-resize;
+    background: linear-gradient(90deg, #eeeef2, #fafafc);
+    border-right: 1px solid var(--line);
+  }
+  .doc-resizer:hover,
+  body.resizing-docs .doc-resizer { background: #e2e2e8; }
+  body.resizing-docs {
+    cursor: col-resize;
+    user-select: none;
+  }
+  .map-pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .board {
+    display: flex;
+    flex-direction: row;   /* Layer 1 (foundation) on the LEFT, apps on the RIGHT */
+    gap: 0;
+    overflow: auto;
+    padding: 26px 32px 56px;
+    align-items: stretch;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+  .layer {
+    flex: 1 0 300px;
+    min-width: 300px;
+    padding: 0 18px;
+    border-right: 1px dashed var(--line);
+    position: relative;
+  }
+  .layer:last-child { border-right: none; }
+  .layer-head { margin-bottom: 16px; }
+  .layer-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--ink); color: #fff; font-weight: 700; font-size: 14px;
+  }
+  .layer-title { font-size: 14.5px; font-weight: 700; margin: 10px 0 2px; letter-spacing: -0.2px; }
+  .layer-sub { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .order-tag {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--pink); margin-bottom: 6px; display: block;
+  }
+
+  .cards { display: flex; flex-direction: column; gap: 7px; }
+  .card {
+    text-decoration: none;
+    color: inherit;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    padding: 8px 11px;
+    display: block;
+    min-width: 0;
+    position: relative;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .card.hasrepo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(230,0,122,0.14);
+    border-color: var(--pink);
+  }
+  .card .name { font-size: 13px; font-weight: 650; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .card .name .label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .tags { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; flex: 0 0 auto; flex-wrap: wrap; }
+  .card .repo { display: block; text-decoration: none; font-size: 11px; color: var(--muted); margin-top: 2px; font-family: ui-monospace, "SF Mono", Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .repo:hover { color: var(--pink); }
+  .card .owner { font-size: 11px; color: #9a9aa4; margin-top: 5px; }
+  .card .arrow { margin-left: auto; color: var(--pink); font-weight: 700; opacity: 0; transition: opacity .12s; }
+  .card.hasrepo:hover .arrow { opacity: 1; }
+
+  .card.norepo {
+    background: var(--warn-bg);
+    border: 1.5px dashed var(--warn);
+    cursor: default;
+  }
+  .card.norepo .name {
+    color: var(--warn);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .card.norepo .name .label {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.25;
+  }
+  .card.norepo .tags { align-self: center; max-width: 104px; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 2px 6px; border-radius: 5px; background: var(--warn); color: #fff;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .card.w3f {
+    background: var(--internal-bg);
+    border-color: var(--internal-line);
+    color: var(--internal-text);
+    box-shadow: none;
+  }
+  .card.w3f.hasrepo:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--internal-line);
+  }
+  .card.w3f .name .label { color: var(--internal-text); font-weight: 600; }
+  .card.w3f .repo { color: var(--internal-muted); }
+
+  footer { padding: 18px 32px 40px; color: #9a9aa4; font-size: 11.5px; }
+  footer code { font-family: ui-monospace, Menlo, monospace; }
+
+  /* Map / Doc segmented control — only shown on mobile */
+  .mobile-tabs { display: none; }
+
+  /* ---------------- Mobile layout (<= 768px) ---------------- */
+  @media (max-width: 768px) {
+    html, body { overflow: auto; height: auto; }
+
+    .app-shell {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .mobile-tabs {
+      display: flex;
+      gap: 6px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: saturate(140%) blur(8px);
+    }
+    .mobile-tab {
+      flex: 1 1 0;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 40px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .mobile-tab[aria-selected="true"] {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: #fff;
+    }
+
+    .doc-resizer { display: none; }
+
+    .doc-pane,
+    .map-pane {
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      height: auto;
+      flex: none;
+      overflow: visible;
+      border-right: none;
+    }
+    .doc-pane { border-bottom: 1px solid var(--doc-line); }
+
+    /* Tab visibility */
+    body.view-map .doc-pane { display: none; }
+    body.view-doc .map-pane { display: none; }
+
+    /* Don't double-stick inner heads under the tab bar */
+    header.page { position: static; padding: 16px; }
+    header.page h1 { font-size: 17px; }
+    header.page p { font-size: 12.5px; }
+    .legend { gap: 12px 16px; margin-top: 12px; }
+    .doc-pane-head { position: static; }
+
+    /* Stack the layer columns vertically */
+    .board {
+      flex-direction: column;
+      overflow: visible;
+      gap: 0;
+      padding: 16px 16px 40px;
+    }
+    .layer {
+      flex: none;
+      width: 100%;
+      min-width: 0;
+      padding: 0 0 18px;
+      border-right: none;
+      border-bottom: 1px dashed var(--line);
+    }
+    .layer:last-child { border-bottom: none; }
+
+    footer { padding: 16px 16px 32px; }
+  }
+</style>
+</head>
+<body class="view-map">
+
+<div class="app-shell">
+  <div class="mobile-tabs" role="tablist" aria-label="Switch between map and docs">
+    <button class="mobile-tab" type="button" data-view="map" role="tab" aria-selected="true">Map</button>
+    <button class="mobile-tab" type="button" data-view="doc" role="tab" aria-selected="false">Doc</button>
+  </div>
+  <aside class="doc-pane" id="docPane" aria-label="Mega doc">
+    <div class="doc-pane-head">
+      <div class="doc-pane-title-row">
+        <h2 class="doc-pane-title">Mega Doc</h2>
+      </div>
+      <p class="doc-pane-sub">Markdown docs in phase order. Missing docs stay visible.</p>
+    </div>
+    <div class="doc-pages" id="docPages"></div>
+  </aside>
+  <div class="doc-resizer" id="docResizer" role="separator" aria-label="Resize mega doc panel"></div>
+  <main class="map-pane">
+    <header class="page">
+      <div class="brand"><span class="dot"></span><h1>Polkadot Prototype Ecosystem Open Sourcing Map</h1></div>
+      <div class="legend">
+        <span><i class="chip repo"></i> Repo + instructions available</span>
+        <span><i class="chip norepo"></i> No repo yet — handoff gap</span>
+        <span><i class="doc-badge">!</i> Missing deploy doc</span>
+        <span><i class="opensource-badge">!</i> Not open source yet</span>
+        <span><i class="ready-badge">✓</i> Checks met</span>
+        <span><i class="chip w3f"></i> Deployed internally</span>
+      </div>
+    </header>
+
+    <div class="board" id="board"></div>
+  </main>
+</div>
+
+<script>
+// Layers ordered left-to-right. Layer 1 = foundation, apps/reference deployments later.
+const LAYERS = [
+  {
+    num: 1,
+    title: "Test Environment + Meta Setup",
+    sub: "The chains and deployment prerequisites everything else depends on.",
+    items: [
+      { name: "Relay Chain + Asset Hub", repo: "https://github.com/paritytech/polkadot-sdk", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Polkadot Bulletin Chain", repo: "https://github.com/paritytech/polkadot-bulletin-chain", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Individuality (People Chain)", repo: "https://github.com/paritytech/individuality", w3f: true, deployDoc: "NA", openSource: false },
+    ]
+  },
+  {
+    num: 2,
+    title: "Deployer Funding",
+    sub: "Funding and account setup needed before first contract deployments.",
+    items: [
+      { name: "Deployer Funding Instructions", repo: null, openSource: false },
+    ]
+  },
+  {
+    num: 3,
+    title: "Core Infrastructure",
+    sub: "Backend services and on-chain plumbing the platform and apps call into.",
+    items: [
+      { name: "Identity backend", repo: "https://github.com/paritytech/identity-backend", openSource: false },
+      { name: "dotNS", repo: "https://github.com/paritytech/dotns", deployDoc: "https://github.com/paritytech/dotns/blob/master/DEPLOYMENTS.md", openSource: true },
+      { name: "dotNS-CLI", repo: "https://github.com/paritytech/dotns-sdk/tree/main#", deployDoc: "NA", openSource: true },
+    ]
+  },
+  {
+    num: 4,
+    title: "SDKs / Developer Packages",
+    sub: "Packages that downstream deploy tooling, clients, and apps consume.",
+    items: [
+      { name: "Triangle-js SDK", repo: "https://github.com/paritytech/triangle-js-sdks", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Product SDK", repo: "https://github.com/paritytech/product-sdk", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Host Api Test SDK", repo: "https://github.com/paritytech/host-api-test-sdk", w3f: true, deployDoc: "NA", openSource: true },
+      { name: "Browse SDK", repo: "https://github.com/paritytech/browse/tree/main/packages/browse-sdk", repoLabel: "paritytech/browse · browse-sdk", w3f: true, deployDoc: "NA", openSource: true },
+    ]
+  },
+  {
+    num: 5,
+    title: "Deploy Tooling / Shared Services",
+    sub: "Reusable deployment tools and workflows used by later repositories.",
+    items: [
+      { name: "Bulletin Deploy", repo: "https://github.com/paritytech/bulletin-deploy", deployDoc: "https://github.com/paritytech/bulletin-deploy/blob/main/DEPLOYMENT.md", openSource: false },
+      { name: "Contract Dependency Manager", repo: "https://github.com/paritytech/contract-dependency-manager", deployDoc: "https://github.com/paritytech/contract-dependency-manager/blob/main/DEPLOY_DOC.md", openSource: true },
+      { name: "Playground CLI", repo: "https://github.com/paritytech/playground-cli", openSource: true },
+    ]
+  },
+  {
+    num: 6,
+    title: "Platform Web / Desktop",
+    sub: "Triangle clients that can be deployed before mobile app-store review.",
+    items: [
+      { name: "Polkadot Web (dot.li)", repo: "https://github.com/paritytech/dotli-community", deployDoc: "https://github.com/paritytech/dotli-community/blob/main/DEPLOYMENT.md", openSource: true },
+      { name: "Polkadot Desktop", repo: "https://github.com/paritytech/polkadot-desktop", openSource: false },
+    ]
+  },
+  {
+    num: 7,
+    title: "Mobile Review Prerequisites",
+    sub: "Prototypes/config values mobile apps need available for app-store review.",
+    items: [
+      { name: "Attestation Protocol", repo: "https://github.com/paritytech/attestation-protocol", deployDoc: "https://github.com/paritytech/attestation-protocol/blob/main/README.md#deploy", openSource: true },
+      { name: "Browse.dot", repo: "https://github.com/paritytech/browse", deployDoc: "https://github.com/paritytech/browse#deploy", openSource: true },
+      { name: "Festival", repo: "https://github.com/paritytech/festival", openSource: true, deployDoc:"https://github.com/paritytech/festival/blob/main/DEPLOY.md" },
+      { name: "Game Results Webview", repo: "https://github.com/paritytech/game-results-webview", deployDoc: "https://github.com/paritytech/game-results-webview/blob/main/DEPLOY_DOC.md", openSource: true },
+      { name: "Collectibles Webview", repo: "https://github.com/paritytech/pocket-collectibles-webview", deployDoc: "https://github.com/paritytech/pocket-collectibles-webview/blob/main/DEPLOY_DOC.md", openSource: true },
+      { name: "W3S Coin", repo: null, w3f: true, openSource: false },
+    ]
+  },
+  {
+    num: 8,
+    title: "Mobile Apps",
+    sub: "Mobile clients after review prerequisites and platform building blocks exist.",
+    items: [
+      { name: "Polkadot Mobile - iOS", repo: "https://github.com/paritytech/polkadot-app-ios-v2", openSource: false },
+      { name: "Polkadot Mobile - Android", repo: "https://github.com/paritytech/polkadot-app-android-v2", openSource: false },
+    ]
+  },
+  {
+    num: 9,
+    title: "Reference Implementations / Prototypes",
+    sub: "End-user prototypes and reference implementations that consume the platform/tooling stack.",
+    items: [
+      { name: "dot.li starter", repo: "https://github.com/paritytech/dotli-starter", openSource: true, deployDoc: "https://github.com/paritytech/dotli-starter/blob/main/README.md" },
+      { name: "Playground App", repo: "https://github.com/paritytech/playground-app", openSource: false, deployDoc: "https://github.com/paritytech/playground-app/blob/main/DEPLOY.MD" },
+      { name: "Playground Constellation", repo: "https://github.com/paritytech/playground-constellation", openSource: false },
+      { name: "T3rminal", repo: "https://github.com/paritytech/t3rminal/", openSource: true },
+      { name: "W3S Pay", repo: "https://github.com/paritytech/w3spay", openSource: true },
+      { name: "W3S Payment Processor", repo: "https://github.com/paritytech/w3s-payment-processor", openSource: true },
+      { name: "W3S Pay Admin", repo: "https://github.com/paritytech/w3spay-admin", openSource: true },
+      { name: "LocalDot", repo: "https://github.com/paritytech/p2p-market", openSource: false },
+      { name: "Mercado", repo: "https://github.com/paritytech/mercado", openSource: false },
+      { name: "W3S Ticketing", repo: "https://github.com/paritytech/tick3t", w3f: true, openSource: false },
+    ]
+  },
+  {
+    num: 10,
+    title: "Playground Sample Apps",
+    sub: "Sample/template deployments that come after the Playground App.",
+    items: [
+      { name: "Simple Survey", repo: "https://github.com/paritytech/simple-survey", openSource: true },
+      { name: "Playground App Template", repo: "https://github.com/paritytech/playground-app-template", openSource: true },
+      { name: "Playground Tutorial", repo: "https://github.com/paritytech/playground-tutorial", openSource: true },
+      { name: "Rock Paper Scissors", repo: "https://github.com/paritytech/Rock-Paper-Scissors", openSource: true },
+      { name: "Feedback Board", repo: "https://github.com/paritytech/feedback-board", openSource: true },
+    ]
+  },
+];
+
+const board = document.getElementById("board");
+const NO_DEPLOY_DOC = "NA";
+const docItemKey = (layerNum, itemIndex) => `${layerNum}-${itemIndex}`;
+const isDeployDocNotApplicable = item => item.deployDoc === NO_DEPLOY_DOC;
+const hasDeployDocValue = item => !!item.deployDoc;
+const deployDocLinkFor = item => isDeployDocNotApplicable(item) ? "" : item.deployDoc;
+const shouldRenderDocItem = item => !isDeployDocNotApplicable(item);
+
+LAYERS.forEach((layer, idx) => {
+  const col = document.createElement("div");
+  col.className = "layer";
+
+  col.innerHTML = `
+    <div class="layer-head">
+      <span class="layer-num">${layer.num}</span>
+      <div class="layer-title">${layer.title}</div>
+      <div class="layer-sub">${layer.sub}</div>
+    </div>
+    <div class="cards"></div>
+  `;
+  const cards = col.querySelector(".cards");
+
+  layer.items.forEach((it, itemIndex) => {
+    const hasRepo = !!it.repo;
+    const deployDoc = deployDocLinkFor(it);
+    const clickTarget = deployDoc || it.repo;
+    const el = document.createElement(clickTarget ? "a" : "div");
+    el.className = "card" + (hasRepo ? " hasrepo" : " norepo") + (it.w3f ? " w3f" : "");
+    if (shouldRenderDocItem(it)) el.dataset.docKey = docItemKey(layer.num, itemIndex);
+    if (clickTarget) { el.href = clickTarget; el.target = "_blank"; el.rel = "noopener"; }
+
+    const repoShort = it.repo ? (it.repoLabel || it.repo.replace("https://github.com/", "")) : "";
+    const tags = [
+      !hasRepo ? `<span class="tag">no repo</span>` : "",
+    ].filter(Boolean).join("");
+    const tag = tags ? `<span class="tags">${tags}</span>` : "";
+    const hasDeployDocStatus = hasDeployDocValue(it);
+    const checksMet = it.openSource === true && hasDeployDocStatus;
+    const missingDoc = hasDeployDocStatus ? "" : `<span class="doc-badge" title="Missing deploy doc">!</span>`;
+    const notOpenSource = it.openSource === false ? `<span class="opensource-badge" title="Not open source yet">!</span>` : "";
+    const ready = checksMet ? `<span class="ready-badge" title="Checks met">✓</span>` : "";
+
+    el.innerHTML = `
+      ${missingDoc}
+      ${notOpenSource}
+      ${ready}
+      <div class="name"><span class="label">${it.name}</span> ${tag}${clickTarget ? '<span class="arrow">↗</span>' : ""}</div>
+      ${hasRepo ? `<div class="repo">${repoShort}</div>` : ""}
+    `;
+    cards.appendChild(el);
+  });
+
+  board.appendChild(col);
+});
+
+const docPane = document.getElementById("docPane");
+const docPages = document.getElementById("docPages");
+const docResizer = document.getElementById("docResizer");
+
+const allDocItems = LAYERS.flatMap(layer =>
+  layer.items.map((item, itemIndex) => ({ ...item, layerNum: layer.num, layerTitle: layer.title, itemIndex }))
+);
+const docItems = allDocItems.filter(shouldRenderDocItem);
+
+const escapeHtml = value => String(value)
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;");
+
+const safeHref = (href, baseUrl = window.location.href) => {
+  try {
+    const url = new URL(href, baseUrl);
+    if (["http:", "https:", "mailto:"].includes(url.protocol)) return url.href;
+  } catch (_) {
+    return "#";
+  }
+  return "#";
+};
+
+const slugify = value => String(value)
+  .toLowerCase()
+  .replace(/`([^`]+)`/g, "$1")
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+  .replace(/<[^>]+>/g, "")
+  .replace(/[^\w\s-]/g, "")
+  .trim()
+  .replace(/\s+/g, "-");
+
+const docSectionId = (item, index) => `deploy-doc-${index}-${slugify(item.name) || "item"}`;
+
+const docState = item => {
+  if (!hasDeployDocValue(item)) return "missing";
+  if (isDeployDocNotApplicable(item)) return "na";
+  return "ready";
+};
+
+const resolveMarkdownSource = docUrl => {
+  const source = new URL(docUrl, window.location.href);
+  const section = source.hash ? source.hash.slice(1) : "";
+  source.hash = "";
+
+  if (source.hostname === "github.com") {
+    const parts = source.pathname.split("/").filter(Boolean);
+    const blobIndex = parts.indexOf("blob");
+    if (blobIndex === 2 && parts.length > 4) {
+      const [owner, repo] = parts;
+      const branch = parts[blobIndex + 1];
+      const filePath = parts.slice(blobIndex + 2).join("/");
+      return {
+        url: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`,
+        section,
+      };
+    }
+  }
+
+  return { url: source.href, section };
+};
+
+const extractMarkdownSection = (markdown, section) => {
+  if (!section) return markdown;
+
+  const target = decodeURIComponent(section).replace(/^user-content-/, "");
+  const lines = markdown.split(/\r?\n/);
+  let start = -1;
+  let level = 0;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (!match) continue;
+    if (slugify(match[2]) === target) {
+      start = i;
+      level = match[1].length;
+      break;
+    }
+  }
+
+  if (start === -1) return markdown;
+
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    const match = lines[i].match(/^(#{1,6})\s+/);
+    if (match && match[1].length <= level) {
+      end = i;
+      break;
+    }
+  }
+
+  return lines.slice(start, end).join("\n");
+};
+
+const formatInlineMarkdown = (text, baseUrl) => {
+  const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let output = "";
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(linkPattern)) {
+    output += escapeHtml(text.slice(lastIndex, match.index));
+    output += `<a href="${escapeHtml(safeHref(match[2], baseUrl))}" target="_blank" rel="noopener">${escapeHtml(match[1])}</a>`;
+    lastIndex = match.index + match[0].length;
+  }
+
+  output += escapeHtml(text.slice(lastIndex));
+  output = output.replace(/`([^`]+)`/g, "<code>$1</code>");
+  output = output.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  return output;
+};
+
+const renderMarkdown = (markdown, baseUrl) => {
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  let html = "";
+  let paragraph = [];
+  let listType = "";
+  let inCode = false;
+  let codeLines = [];
+
+  const closeList = () => {
+    if (!listType) return;
+    html += `</${listType}>`;
+    listType = "";
+  };
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    html += `<p>${paragraph.join(" ")}</p>`;
+    paragraph = [];
+  };
+
+  const openList = type => {
+    if (listType === type) return;
+    closeList();
+    html += `<${type}>`;
+    listType = type;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (inCode) {
+      if (trimmed.startsWith("```")) {
+        html += `<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`;
+        codeLines = [];
+        inCode = false;
+      } else {
+        codeLines.push(line);
+      }
+      continue;
+    }
+
+    if (trimmed.startsWith("```")) {
+      flushParagraph();
+      closeList();
+      inCode = true;
+      continue;
+    }
+
+    if (!trimmed) {
+      flushParagraph();
+      closeList();
+      continue;
+    }
+
+    const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      closeList();
+      const level = heading[1].length;
+      html += `<h${level}>${formatInlineMarkdown(heading[2], baseUrl)}</h${level}>`;
+      continue;
+    }
+
+    if (/^[-*_]{3,}$/.test(trimmed)) {
+      flushParagraph();
+      closeList();
+      html += "<hr>";
+      continue;
+    }
+
+    const unordered = trimmed.match(/^[-*]\s+(.+)$/);
+    if (unordered) {
+      flushParagraph();
+      openList("ul");
+      html += `<li>${formatInlineMarkdown(unordered[1], baseUrl)}</li>`;
+      continue;
+    }
+
+    const ordered = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (ordered) {
+      flushParagraph();
+      openList("ol");
+      html += `<li>${formatInlineMarkdown(ordered[1], baseUrl)}</li>`;
+      continue;
+    }
+
+    const quote = trimmed.match(/^>\s?(.+)$/);
+    if (quote) {
+      flushParagraph();
+      closeList();
+      html += `<blockquote>${formatInlineMarkdown(quote[1], baseUrl)}</blockquote>`;
+      continue;
+    }
+
+    paragraph.push(formatInlineMarkdown(trimmed, baseUrl));
+  }
+
+  if (inCode) html += `<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`;
+  flushParagraph();
+  closeList();
+
+  return html || `<p>No deploy document content found.</p>`;
+};
+
+const renderDocShells = () => {
+  docPages.innerHTML = docItems.map((item, index) => {
+    const state = docState(item);
+    const id = docSectionId(item, index);
+    const title = item.repo
+      ? `<a class="doc-title-link" href="${escapeHtml(safeHref(item.repo))}" target="_blank" rel="noopener">${escapeHtml(item.name)}</a>`
+      : escapeHtml(item.name);
+    const status =
+      state === "ready"
+        ? `Deploy doc available · <a href="${escapeHtml(safeHref(item.deployDoc))}" target="_blank" rel="noopener">Open doc</a>`
+        : state === "na"
+          ? "Deploy doc not applicable"
+          : "Deploy doc missing";
+    const body =
+      state === "ready"
+        ? `<div class="doc-body loading" id="${id}-body">Loading deploy doc...</div>`
+        : state === "na"
+          ? `<div class="doc-body empty">This item is marked as not requiring a deploy doc.</div>`
+          : `<div class="doc-body empty">No deploy doc has been linked for this item yet.</div>`;
+
+    return `
+      <section class="doc-page ${state}" id="${id}" data-doc-key="${escapeHtml(docItemKey(item.layerNum, item.itemIndex))}">
+        <div class="doc-page-head" role="button" tabindex="0" aria-controls="${id}-content" aria-expanded="true">
+          <div>
+            <div class="doc-page-meta">Phase ${item.layerNum} · ${escapeHtml(item.layerTitle)}</div>
+            <h2>${title}</h2>
+          </div>
+          <span class="doc-page-toggle" aria-hidden="true"></span>
+        </div>
+        <div class="doc-page-content" id="${id}-content">
+          <div class="doc-status ${state}">${status}</div>
+          ${body}
+        </div>
+      </section>
+    `;
+  }).join("");
+};
+
+const loadDeployDocs = async () => {
+  await Promise.all(docItems.map(async (item, index) => {
+    if (docState(item) !== "ready") return;
+
+    const id = docSectionId(item, index);
+    const body = document.getElementById(`${id}-body`);
+    if (!body) return;
+
+    try {
+      const source = resolveMarkdownSource(item.deployDoc);
+      const response = await fetch(source.url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const markdown = extractMarkdownSection(await response.text(), source.section);
+      body.classList.remove("loading");
+      body.innerHTML = renderMarkdown(markdown, source.url);
+    } catch (error) {
+      body.classList.remove("loading");
+      body.classList.add("empty");
+      body.innerHTML = `Could not load this Markdown file in the page. <a href="${escapeHtml(item.deployDoc)}" target="_blank" rel="noopener">Open it directly</a>.`;
+    }
+  }));
+};
+
+const initDocPaneResize = () => {
+  const min = 280;
+  const max = () => Math.min(window.innerWidth * 0.72, 940);
+
+  try {
+    const savedWidth = Number(localStorage.getItem("docPaneWidth"));
+    if (savedWidth) docPane.style.width = `${Math.max(min, Math.min(savedWidth, max()))}px`;
+  } catch (_) {}
+
+  const setWidth = clientX => {
+    const width = Math.max(min, Math.min(clientX, max()));
+    docPane.style.width = `${width}px`;
+    try { localStorage.setItem("docPaneWidth", String(Math.round(width))); } catch (_) {}
+  };
+
+  docResizer.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    document.body.classList.add("resizing-docs");
+    docResizer.setPointerCapture(event.pointerId);
+
+    const onMove = moveEvent => setWidth(moveEvent.clientX);
+    const onUp = upEvent => {
+      document.body.classList.remove("resizing-docs");
+      docResizer.releasePointerCapture(upEvent.pointerId);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  });
+
+  docResizer.addEventListener("dblclick", () => {
+    docPane.style.width = "";
+    try { localStorage.removeItem("docPaneWidth"); } catch (_) {}
+  });
+};
+
+const toggleDocSection = section => {
+  if (!section) return;
+
+  const collapsed = section.classList.toggle("is-collapsed");
+  const head = section.querySelector(".doc-page-head");
+  const title = section.querySelector("h2")?.textContent || "doc";
+
+  head?.setAttribute("aria-expanded", String(!collapsed));
+  head?.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} ${title} section`);
+};
+
+const initDocPageCollapse = () => {
+  docPages.addEventListener("click", event => {
+    if (event.target.closest("a")) return;
+
+    const head = event.target.closest(".doc-page-head");
+    if (!head) return;
+
+    toggleDocSection(head.closest(".doc-page"));
+  });
+
+  docPages.addEventListener("keydown", event => {
+    if (!["Enter", " "].includes(event.key)) return;
+
+    const head = event.target.closest(".doc-page-head");
+    if (!head) return;
+
+    event.preventDefault();
+    toggleDocSection(head.closest(".doc-page"));
+  });
+};
+
+const scrollDocToCard = card => {
+  const key = card.dataset.docKey;
+  if (!key) return;
+
+  const section = docPages.querySelector(`.doc-page[data-doc-key="${key}"]`);
+  if (!section) return;
+
+  section.classList.remove("is-collapsed");
+  section.querySelector(".doc-page-head")?.setAttribute("aria-expanded", "true");
+  docPages.querySelectorAll(".doc-page.is-targeted").forEach(el => {
+    if (el !== section) el.classList.remove("is-targeted");
+  });
+  section.classList.add("is-targeted");
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const mobileQuery = window.matchMedia("(max-width: 768px)");
+
+const setMobileView = view => {
+  const showDoc = view === "doc";
+  document.body.classList.toggle("view-doc", showDoc);
+  document.body.classList.toggle("view-map", !showDoc);
+  document.querySelectorAll(".mobile-tab").forEach(btn => {
+    btn.setAttribute("aria-selected", String(btn.dataset.view === view));
+  });
+};
+
+const initMobileTabs = () => {
+  const tabs = document.querySelector(".mobile-tabs");
+  if (!tabs) return;
+  tabs.addEventListener("click", event => {
+    const btn = event.target.closest(".mobile-tab");
+    if (btn) setMobileView(btn.dataset.view);
+  });
+};
+
+const initMobileCardTap = () => {
+  board.addEventListener("click", event => {
+    if (!mobileQuery.matches) return;
+    const card = event.target.closest(".card[data-doc-key]");
+    if (!card) return;
+    event.preventDefault();
+    setMobileView("doc");
+    scrollDocToCard(card);
+  });
+};
+
+const initMapDocSync = () => {
+  let currentKey = "";
+
+  board.addEventListener("mouseover", event => {
+    const card = event.target.closest(".card[data-doc-key]");
+    if (!card || card.dataset.docKey === currentKey) return;
+
+    currentKey = card.dataset.docKey;
+    scrollDocToCard(card);
+  });
+
+  board.addEventListener("focusin", event => {
+    const card = event.target.closest(".card[data-doc-key]");
+    if (card) scrollDocToCard(card);
+  });
+};
+
+renderDocShells();
+loadDeployDocs();
+
+// Pane resize is desktop-only; init once and never on mobile (it sets an
+// inline width that would override the responsive layout).
+let docResizeInited = false;
+const ensureDocPaneResize = () => {
+  if (docResizeInited || mobileQuery.matches) return;
+  docResizeInited = true;
+  initDocPaneResize();
+};
+ensureDocPaneResize();
+mobileQuery.addEventListener("change", ensureDocPaneResize);
+
+initDocPageCollapse();
+initMapDocSync();
+initMobileTabs();
+initMobileCardTap();
+</script>
+</body>
+</html>

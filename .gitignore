@@ -1,0 +1,7 @@
+reference-repos/
+
+# Generated open sourcing map exports. Built in CI and published to GitHub Pages
+# after each merge, so they are not committed (avoids concurrent-PR conflicts).
+# Regenerate locally with: bash scripts/generate.sh
+assets/open-source-map.svg
+assets/open-source-map.png

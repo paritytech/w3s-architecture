@@ -1,0 +1,123 @@
+name: Open Sourcing Map Preview
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Generate map diff
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install render tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends librsvg2-bin
+
+      - name: Checkout base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+
+      - name: Generate and compare open sourcing map assets
+        id: asset-diff
+        run: |
+          set -euo pipefail
+
+          mkdir -p preview
+
+          if [[ ! -x base/scripts/generate.sh || ! -x head/scripts/generate.sh ]]; then
+            echo "scripts/generate.sh is missing or not executable in base or PR checkout" >&2
+            exit 1
+          fi
+
+          base/scripts/generate.sh "$PWD/base"
+          head/scripts/generate.sh "$PWD/head"
+
+          cp base/assets/open-source-map.svg preview/main.svg
+          cp base/assets/open-source-map.png preview/main.png
+          cp head/assets/open-source-map.svg preview/pr.svg
+          cp head/assets/open-source-map.png preview/pr.png
+
+          if cmp -s preview/main.svg preview/pr.svg; then
+            echo "asset_diff=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "asset_diff=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload generated assets
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-sourcing-map-preview-pr-${{ github.event.pull_request.number }}
+          path: preview/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ASSET_DIFF: ${{ steps.asset-diff.outputs.asset_diff }}
+        with:
+          script: |
+            const marker = "<!-- open-sourcing-map-preview -->";
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const artifactUrl = process.env.ARTIFACT_URL;
+            const assetDiff = process.env.ASSET_DIFF === "true";
+
+            const body = [
+              marker,
+              "### Open Sourcing Map Preview",
+              "",
+              assetDiff
+                ? "Open Sourcing Map asset diff detected. The map exports are generated in CI (not committed) and published to GitHub Pages after merge."
+                : "No Open Sourcing Map asset diff detected.",
+              "",
+              `[Download generated assets (before/after)](${artifactUrl})`,
+            ].join("\n");
+
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: pr.number,
+              per_page: 100,
+            });
+
+            const existing = comments.data.find((comment) =>
+              comment.user.type === "Bot" && comment.body && comment.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body,
+              });
+            }
